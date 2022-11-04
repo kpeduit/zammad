@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 RSpec.describe 'Manage > Users', type: :system do
-  describe 'switching to an alternative user', authentication_type: :form, authenticated_as: :authenticate do
+  describe 'switching to an alternative user', authenticated_as: :authenticate, authentication_type: :form do
     let(:original_user)        { create(:admin) }
     let(:alternative_one_user) { create(:admin) }
     let(:alternative_two_user) { create(:admin) }
@@ -208,9 +208,9 @@ RSpec.describe 'Manage > Users', type: :system do
           fill_in 'firstname', with: 'Üser'
 
           click_on 'Submit'
-
-          expect(page).to have_no_text('Invalid email')
         end
+
+        expect(page).to have_no_text('Invalid email')
       end
     end
 
@@ -301,6 +301,22 @@ RSpec.describe 'Manage > Users', type: :system do
 
     it 'does update the user list after import of new users' do
       expect(page).to have_text('firstname-simple-import1')
+    end
+  end
+
+  describe 'Missing secondary organizations in user profile after refreshing with many secondary organizations. #4331' do
+    let(:organizations) { create_list(:organization, 20) }
+    let(:customer)      { create(:customer, organization: organizations[0], organizations: organizations[1..]) }
+
+    before do
+      customer
+      visit '#manage/users'
+      click "tr[data-id='#{customer.id}']"
+    end
+
+    it 'does show all secondary organizations on edit' do
+      tokens = page.all('div[data-attribute-name="organization_ids"] .token')
+      expect(tokens.count).to eq(19)
     end
   end
 end

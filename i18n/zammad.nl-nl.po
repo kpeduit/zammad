@@ -1325,6 +1325,7 @@ msgstr ""
 "Weet je zeker dat je opnieuw wilt laden? Alle niet opgeslagen aanpassingen "
 "gaan verloren"
 
+#: app/assets/javascripts/app/controllers/_application_controller/_modal_generic_confirm_delete.coffee
 #: app/assets/javascripts/app/controllers/_channel/email.coffee
 #: app/assets/javascripts/app/controllers/_channel/facebook.coffee
 #: app/assets/javascripts/app/controllers/_channel/google.coffee
@@ -1339,6 +1340,16 @@ msgstr ""
 #: app/frontend/shared/components/Form/fields/FieldFile/FieldFileInput.vue
 msgid "Are you sure?"
 msgstr "Weet je het zeker?"
+
+#: app/frontend/apps/mobile/components/CommonDialogObjectForm/CommonDialogObjectForm.vue
+#, fuzzy
+#| msgid ""
+#| "Are you sure you want to reload? You have unsaved changes that will get "
+#| "lost"
+msgid "Are you sure? You have unsaved changes that will get lost."
+msgstr ""
+"Weet je zeker dat je opnieuw wilt laden? Alle niet opgeslagen aanpassingen "
+"gaan verloren"
 
 #: app/assets/javascripts/app/controllers/_ui_element/_application_action.coffee
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
@@ -1885,6 +1896,10 @@ msgstr "CTI klant laatste activiteit"
 msgid "CTI integration"
 msgstr "CTI integratie"
 
+#: app/frontend/shared/components/Form/fields/FieldDate/FieldDateTimeInput.vue
+msgid "CW"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_profile/calendar_subscriptions.coffee
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
 #: app/assets/javascripts/app/controllers/calendar.coffee
@@ -1980,8 +1995,8 @@ msgstr ""
 #: app/assets/javascripts/app/views/integration/ldap_wizard.jst.eco
 #: app/assets/javascripts/app/views/knowledge_base/scheduled_widget.jst.eco
 #: app/assets/javascripts/app/views/widget/invite_user.jst.eco
+#: app/frontend/apps/mobile/components/CommonDialogObjectForm/CommonDialogObjectForm.vue
 #: app/frontend/apps/mobile/components/CommonSectionPopup/CommonSectionPopup.vue
-#: app/frontend/apps/mobile/components/Organization/OrganizationEditDialog.vue
 #: app/frontend/apps/mobile/pages/account/views/AccountAvatar.vue
 #: app/frontend/apps/mobile/pages/search/views/SearchOverview.vue
 #: app/frontend/shared/components/Form/fields/FieldAutoComplete/FieldAutoCompleteInputDialog.vue
@@ -2009,6 +2024,12 @@ msgstr "Upload annuleren"
 #: app/assets/javascripts/app/controllers/knowledge_base/delete_action.coffee
 msgid "Cannot delete category"
 msgstr "Can categorie niet verwijderen"
+
+msgid "Cannot delete record because a dependent %{record} exists"
+msgstr ""
+
+msgid "Cannot delete record because dependent %{record} exist"
+msgstr ""
 
 #: app/policies/ticket_policy.rb
 msgid "Cannot follow-up on a closed ticket. Please create a new ticket."
@@ -2712,6 +2733,7 @@ msgstr "Land"
 #: app/assets/javascripts/app/views/profile/token_access.jst.eco
 #: app/assets/javascripts/app/views/translation/todo.jst.eco
 #: app/assets/javascripts/app/views/widget/shared_draft.jst.eco
+#: app/frontend/apps/mobile/pages/ticket/views/TicketCreate.vue
 msgid "Create"
 msgstr "Aanmaken"
 
@@ -3442,6 +3464,12 @@ msgid "Defines if application is used as online service."
 msgstr "Stel in of de applicatie als online service wordt gebruikt."
 
 #: db/seeds/settings.rb
+msgid ""
+"Defines if calendar weeks are shown in the picker of date/datetime fields to "
+"easily select the correct date."
+msgstr ""
+
+#: db/seeds/settings.rb
 msgid "Defines if generic CTI integration is enabled or not."
 msgstr "Zet de generieke CTI-integratie aan of uit."
 
@@ -3805,8 +3833,8 @@ msgstr "Stel de maximaal geaccepteerde e-mailgrootte (MB) in."
 
 #: db/seeds/settings.rb
 msgid ""
-"Defines the maximum number of allowed task bar tasks before auto cleanup "
-"removes surplus tasks when creating new tasks."
+"Defines the maximum number of allowed open tabs before auto cleanup removes "
+"surplus tabs when creating new tabs."
 msgstr ""
 
 #: db/seeds/settings.rb
@@ -3936,10 +3964,12 @@ msgstr ""
 msgid "Defines transaction backend."
 msgstr "Stel de transaction-backend in."
 
+#: app/assets/javascripts/app/controllers/_application_controller/_modal_generic_confirm_delete.coffee
 #: app/assets/javascripts/app/controllers/_application_controller/table.coffee
 #: app/assets/javascripts/app/controllers/_manage/knowledge_base.coffee
 #: app/assets/javascripts/app/controllers/data_privacy.coffee
 #: app/assets/javascripts/app/controllers/knowledge_base/delete_action.coffee
+#: app/assets/javascripts/app/controllers/package.coffee
 #: app/assets/javascripts/app/controllers/user.coffee
 #: app/assets/javascripts/app/controllers/user_profile.coffee
 #: app/assets/javascripts/app/views/calendar/index.jst.eco
@@ -4046,7 +4076,9 @@ msgid "Deleted Organization:"
 msgstr "Organisatie verwijderen"
 
 #: app/assets/javascripts/app/views/data_privacy/tasks.jst.eco
-msgid "Deleted tickets (%s in total)"
+#, fuzzy
+#| msgid "Deleted tickets (%s in total)"
+msgid "Deleted tickets (%s in total):"
 msgstr "Verwijderde tickets (%s in totaal)"
 
 #: app/assets/javascripts/app/controllers/data_privacy.coffee
@@ -4126,6 +4158,10 @@ msgstr "Apparaat"
 #: db/seeds/permissions.rb
 msgid "Devices"
 msgstr "Apparaten"
+
+#: app/frontend/apps/mobile/components/CommonSelect/CommonSelect.vue
+msgid "Dialog window with selections"
+msgstr ""
 
 #: app/assets/javascripts/app/views/profile/language.jst.eco
 #: app/frontend/apps/mobile/pages/account/views/AccountOverview.vue
@@ -4340,7 +4376,6 @@ msgstr "Paasvakantie"
 #: app/assets/javascripts/app/views/telegram/index.jst.eco
 #: app/assets/javascripts/app/views/twitter/list.jst.eco
 #: app/assets/javascripts/app/views/widget/text_module.jst.eco
-#: app/frontend/apps/mobile/components/Organization/OrganizationEditDialog.vue
 #: app/frontend/apps/mobile/pages/home/views/Home.vue
 #: app/frontend/apps/mobile/pages/organization/views/OrganizationDetailView.vue
 #: app/frontend/apps/mobile/pages/user/views/UserDetailView.vue
@@ -4798,6 +4833,12 @@ msgstr "Private Key Secret invoeren"
 msgid "Enter Title…"
 msgstr "Voer de titel in…"
 
+#: app/assets/javascripts/app/views/generic/input.jst.eco
+#, fuzzy
+#| msgid "Please enter a valid email address."
+msgid "Enter a valid email address."
+msgstr "Voer a.u.b. een geldig email-adres in."
+
 #: app/assets/javascripts/app/views/import/freshdesk.jst.eco
 #: app/assets/javascripts/app/views/import/kayako.jst.eco
 #: app/assets/javascripts/app/views/import/zendesk.jst.eco
@@ -4807,10 +4848,6 @@ msgstr "Invoergegevens invoeren"
 #: app/frontend/shared/components/Form/fields/FieldEditor/useEditorActions.ts
 msgid "Enter link URL"
 msgstr "Voer URL in"
-
-#: app/frontend/apps/mobile/pages/search/views/SearchOverview.vue
-msgid "Enter more than two characters to get any results…"
-msgstr "Typ meer dan twee karakters om resultaten te zien…"
 
 #: app/assets/javascripts/app/views/import/freshdesk.jst.eco
 #: app/assets/javascripts/app/views/import/kayako.jst.eco
@@ -5682,7 +5719,10 @@ msgid "Has processed"
 msgstr "Heeft verwerkt"
 
 #: app/frontend/apps/mobile/pages/ticket/components/TicketDetailView/TicketViewersDialog.vue
-msgid "Has ticket open in taskbar, but is not actively looking at the ticket."
+#, fuzzy
+#| msgid ""
+#| "Has ticket open in taskbar, but is not actively looking at the ticket."
+msgid "Has ticket open in tabs, but is not actively looking at the ticket."
 msgstr ""
 "Heeft het ticket open staan in de taakbalk, maar is niet actief aan het "
 "kijken."
@@ -6201,7 +6241,10 @@ msgstr ""
 "behulp van de zoekfunctie. "
 
 #: app/assets/javascripts/app/views/integration/placetel.jst.eco
-msgid "In order for Zammad to access %s, the %s API token must be stored here"
+#, fuzzy
+#| msgid ""
+#| "In order for Zammad to access %s, the %s API token must be stored here"
+msgid "In order for Zammad to access %s, the %s API token must be stored here:"
 msgstr ""
 "Om Zammad in staat te stellen %s benaderen moet de %s API-token hier worden "
 "opgeslagen"
@@ -7109,9 +7152,10 @@ msgid "Maximum failed logins"
 msgstr "Maximale onjuiste inlogpogingen"
 
 #: db/seeds/settings.rb
-msgid ""
-"Maximum number of allowed tasks before auto cleanup removes surplus tasks."
-msgstr ""
+#, fuzzy
+#| msgid "Maximum number of recursively executed triggers."
+msgid "Maximum number of open tabs."
+msgstr "Maximum aantal recursief uitgevoerde triggers."
 
 #: db/seeds/settings.rb
 msgid "Maximum number of recursively executed triggers."
@@ -7323,7 +7367,9 @@ msgid "Most recent activity"
 msgstr "recentste activiteit"
 
 #: app/assets/javascripts/app/views/settings/storage_provider.jst.eco
-msgid "Move all from \"%s\" to \"%s\""
+#, fuzzy
+#| msgid "Move all from \"%s\" to \"%s\""
+msgid "Move all from \"%s\" to \"%s\":"
 msgstr "Verplaats alles van \"%s\" naar \"%s\""
 
 #: app/frontend/shared/form/i18n/locales.ts
@@ -7943,11 +7989,11 @@ msgstr "Niet geautoriseerd (functie niet mogelijk)"
 msgid "Not authorized (token expired)!"
 msgstr "Niet geautoriseerd (token verlopen)!"
 
-#: app/controllers/application_controller/authenticates.rb lib/user_context.rb
+#: app/controllers/application_controller/authenticates.rb app/models/token.rb
 msgid "Not authorized (token)!"
 msgstr "Niet geautoriseerd (token)!"
 
-#: app/controllers/application_controller/authenticates.rb lib/user_context.rb
+#: app/controllers/application_controller/authenticates.rb app/models/user.rb
 msgid "Not authorized (user)!"
 msgstr "Niet geautoriseerd (gebruiker)!"
 
@@ -8087,11 +8133,6 @@ msgstr "Object"
 msgid "Object Manager"
 msgstr "Object beheerder"
 
-#: app/controllers/application_controller/handles_errors.rb
-#: app/graphql/gql/zammad_schema.rb
-msgid "Object already exists!"
-msgstr "Object bestaat al!"
-
 #: app/assets/javascripts/app/controllers/object_manager.coffee
 #: db/seeds/permissions.rb
 msgid "Objects"
@@ -8214,7 +8255,9 @@ msgid "Open ticket indicator"
 msgstr "Ticket-indicator openen"
 
 #: app/frontend/apps/mobile/pages/ticket/components/TicketDetailView/TicketViewersDialog.vue
-msgid "Opened in taskbar"
+#, fuzzy
+#| msgid "Opened in taskbar"
+msgid "Opened in tabs"
 msgstr "Geopend in de taakbalk"
 
 #: app/assets/javascripts/app/views/agent_ticket_view/content.jst.eco
@@ -8274,6 +8317,12 @@ msgstr "Bedrijfsnaam"
 msgid "Organization Support"
 msgstr "Bedrijfsondersteuning"
 
+#: app/frontend/apps/mobile/entities/organization/composables/useOrganizationEdit.ts
+#, fuzzy
+#| msgid "The language could not be updated."
+msgid "Organization could not be updated."
+msgstr "De taal kon niet worden bijgewerkt."
+
 #: app/frontend/apps/mobile/pages/user/views/UserDetailView.vue
 msgid "Organization tickets"
 msgstr "Tickets organisatie"
@@ -8297,6 +8346,12 @@ msgid ""
 msgstr ""
 "Organisaties zijn voor elke persoon in het systeem: Behandelaren (eigenaren, "
 "…) en klanten."
+
+#: app/frontend/apps/mobile/pages/search/plugins/organization.ts
+#, fuzzy
+#| msgid "Organization tickets"
+msgid "Organizations with \"%s\""
+msgstr "Tickets organisatie"
 
 #: app/assets/javascripts/app/views/generic/calender_preview.jst.eco
 msgid "Organizer"
@@ -8770,7 +8825,9 @@ msgid "Previous in overview"
 msgstr "Vorige in overzicht"
 
 #: app/assets/javascripts/app/views/data_privacy/tasks.jst.eco
-msgid "Previously owned tickets (%s in total)"
+#, fuzzy
+#| msgid "Previously owned tickets (%s in total)"
+msgid "Previously owned tickets (%s in total):"
 msgstr "Voormalig toegewezen tcikets (in totaal %s)"
 
 #: app/assets/javascripts/app/models/overview.coffee
@@ -9466,7 +9523,7 @@ msgstr "zaterdag"
 #: app/assets/javascripts/app/views/settings/ticket_auto_assignment.jst.eco
 #: app/assets/javascripts/app/views/time_accounting/index.jst.eco
 #: app/assets/javascripts/app/views/widget/text_module.jst.eco
-#: app/frontend/apps/mobile/components/Organization/OrganizationEditDialog.vue
+#: app/frontend/apps/mobile/components/CommonDialogObjectForm/CommonDialogObjectForm.vue
 #: app/frontend/apps/mobile/pages/account/views/AccountAvatar.vue
 msgid "Save"
 msgstr "Opslaan"
@@ -9537,6 +9594,7 @@ msgstr "Scroll naar beneden om nieuwe tickets te bekijken"
 #: app/assets/javascripts/app/views/knowledge_base/search_field_widget.jst.eco
 #: app/assets/javascripts/app/views/widget/text_module.jst.eco
 #: app/frontend/apps/mobile/pages/search/routes.ts
+#: app/frontend/apps/mobile/pages/search/views/SearchOverview.vue
 msgid "Search"
 msgstr "Zoeken"
 
@@ -9667,9 +9725,12 @@ msgstr "Keuzeschakelaar"
 msgid "Selects the ticket number generator module."
 msgstr "Selecteerd de ticket nummer generatie module."
 
+#: app/frontend/apps/mobile/components/CommonSelect/CommonSelect.vue
 #: app/frontend/shared/components/Form/fields/FieldAutoComplete/FieldAutoCompleteInput.vue
+#: app/frontend/shared/components/Form/fields/FieldAutoComplete/FieldAutoCompleteInputDialog.vue
 #: app/frontend/shared/components/Form/fields/FieldSelect/FieldSelectInput.vue
 #: app/frontend/shared/components/Form/fields/FieldTreeSelect/FieldTreeSelectInput.vue
+#: app/frontend/shared/components/Form/fields/FieldTreeSelect/FieldTreeSelectInputDialog.vue
 msgid "Select…"
 msgstr "Selecteer…"
 
@@ -9956,6 +10017,10 @@ msgstr "Toon zoekdetails"
 #: app/assets/javascripts/app/views/widget/ticket_stats_list.jst.eco
 msgid "Show all…"
 msgstr "Toon alles…"
+
+#: db/seeds/settings.rb
+msgid "Show calendar weeks in the picker of date/datetime fields"
+msgstr ""
 
 #: app/assets/javascripts/app/views/channel/chat.jst.eco
 msgid "Show chat automatically"
@@ -11326,6 +11391,19 @@ msgstr ""
 "Het verwijderen kan niet ongedaan worden gemaakt. Als u zeker weet dat u "
 "hiermee door wilt gaan geef dan '%s' in."
 
+#: app/assets/javascripts/app/controllers/package.coffee
+#, fuzzy
+#| msgid ""
+#| "There is no rollback of this deletion possible. If you are sure that you "
+#| "wish to proceed, please type \"%s\" into the input."
+msgid ""
+"There is no rollback of this deletion. If you are sure that you wish to "
+"proceed, please type \"%s\" into the input. All related data to this package "
+"will be lost."
+msgstr ""
+"Het verwijderen kan niet ongedaan worden gemaakt. Als u zeker weet dat u "
+"hiermee door wilt gaan geef dan '%s' in."
+
 #: app/controllers/import_freshdesk_controller.rb
 #: app/controllers/import_otrs_controller.rb
 #: app/controllers/import_zendesk_controller.rb lib/email_helper/probe.rb
@@ -11361,6 +11439,12 @@ msgstr ""
 #: app/assets/javascripts/app/controllers/_ui_element/holiday_selector.coffee
 msgid "This entry already exists!"
 msgstr "Deze invoer bestaat al!"
+
+#: config/initializers/activemodel_error.rb
+#, fuzzy
+#| msgid "This field is required."
+msgid "This field %s"
+msgstr "Dit veld is verplicht."
 
 #: app/frontend/shared/form/i18n/locales.ts
 msgid "This field can only contain alphabetical characters."
@@ -11505,6 +11589,13 @@ msgid "This might take some time during which the system can't be used."
 msgstr ""
 "Dit kan enige tijd duren waardoor het systeem tijdelijk niet kan worden "
 "gebruikt."
+
+#: app/controllers/application_controller/handles_errors.rb
+#: app/graphql/gql/zammad_schema.rb
+#, fuzzy
+#| msgid "This bot already exists."
+msgid "This object already exists."
+msgstr "Deze bot bestaat al."
 
 #: app/views/knowledge_base/public/_top_banner.html.erb
 msgid "This page is invisible to the public."
@@ -11856,6 +11947,12 @@ msgstr "Tickets van organisatie"
 
 #: app/assets/javascripts/app/views/widget/ticket_stats.jst.eco
 msgid "Tickets of User"
+msgstr "Tickets van gebruiker"
+
+#: app/frontend/apps/mobile/pages/search/plugins/ticket.ts
+#, fuzzy
+#| msgid "Tickets of User"
+msgid "Tickets with \"%s\""
 msgstr "Tickets van gebruiker"
 
 #: app/assets/javascripts/app/views/generic/calender_preview.jst.eco
@@ -12225,6 +12322,12 @@ msgstr "Ontgrendelen"
 msgid "Unread notification"
 msgstr "Servicemelding"
 
+#: app/frontend/apps/mobile/components/layout/LayoutBottomNavigation.vue
+#, fuzzy
+#| msgid "Service Notification"
+msgid "Unread notifications"
+msgstr "Servicemelding"
+
 #: app/assets/javascripts/app/views/widget/mention.jst.eco
 msgid "Unsubscribe"
 msgstr "Uitschrijven"
@@ -12541,7 +12644,14 @@ msgstr "Gebruikersvoorkeuren"
 
 #: app/assets/javascripts/app/controllers/getting_started/admin.coffee
 #: app/assets/javascripts/app/controllers/signup.coffee
+#: app/frontend/apps/mobile/entities/user/composables/useUserCreate.ts
 msgid "User could not be created."
+msgstr "Gebruiker kon niet aangemaakt worden."
+
+#: app/frontend/apps/mobile/entities/user/composables/useUserEdit.ts
+#, fuzzy
+#| msgid "User could not be created."
+msgid "User could not be updated."
 msgstr "Gebruiker kon niet aangemaakt worden."
 
 #: lib/external_credential/google.rb
@@ -12603,6 +12713,10 @@ msgstr "Gebruikersnaam voor Proxy verbinding."
 msgid "Users"
 msgstr "Gebruikers"
 
+#: app/frontend/apps/mobile/pages/search/plugins/user.ts
+msgid "Users with \"%s\""
+msgstr ""
+
 #: app/assets/javascripts/app/views/integration/ldap_wizard.jst.eco
 msgid "Users without assigned LDAP groups"
 msgstr "Gebruikers zonder toegewezen LDAP groepen"
@@ -12639,6 +12753,9 @@ msgstr ""
 #: db/seeds/object_manager_attributes.rb
 msgid "VIP"
 msgstr "VIP"
+
+msgid "Validation failed: %{errors}"
+msgstr ""
 
 #: app/assets/javascripts/app/views/integration/clearbit.jst.eco
 #: app/assets/javascripts/app/views/integration/cti.jst.eco
@@ -13342,14 +13459,18 @@ msgid "You need to add the following Javascript code snippet to your web page:"
 msgstr ""
 "Je moet het volgende Javascript-codefragment aan je webpagina toevoegen"
 
-#: app/assets/javascripts/app/views/integration/cti.jst.eco
-msgid "You need to configure the Zammad endpoints in the %s"
-msgstr "U moet de Zammad-eindpunten in de %s configureren"
-
 #: app/assets/javascripts/app/views/integration/placetel.jst.eco
 #: app/assets/javascripts/app/views/integration/sipgate.jst.eco
-msgid "You need to configure the Zammad endpoints in the %s web interface"
+#, fuzzy
+#| msgid "You need to configure the Zammad endpoints in the %s web interface"
+msgid "You need to configure the Zammad endpoints in the %s web interface:"
 msgstr "U moet de Zammad-endpoints configureren in de %s-webinterface"
+
+#: app/assets/javascripts/app/views/integration/cti.jst.eco
+#, fuzzy
+#| msgid "You need to configure the Zammad endpoints in the %s"
+msgid "You need to configure the Zammad endpoints in the %s:"
+msgstr "U moet de Zammad-eindpunten in de %s configureren"
 
 #: app/assets/javascripts/app/controllers/agent_ticket_create.coffee
 #: app/assets/javascripts/app/controllers/ticket_zoom/article_new.coffee
@@ -13657,6 +13778,14 @@ msgstr "tussen updates van Behandelaren"
 msgid "busy"
 msgstr "bezig"
 
+#, fuzzy
+#| msgid "Group can't be blank"
+msgid "can't be blank"
+msgstr "Groep mag niet leeg zijn"
+
+msgid "can't be empty"
+msgstr ""
+
 #: app/assets/javascripts/app/controllers/_ui_element/core_workflow_condition.coffee
 msgid "changed to"
 msgstr "gewijzigd naar"
@@ -13784,6 +13913,9 @@ msgstr "verbreken"
 msgid "does not exist"
 msgstr "bestaat niet"
 
+msgid "doesn't match %{attribute}"
+msgstr ""
+
 #: app/assets/javascripts/app/views/import/freshdesk.jst.eco
 #: app/assets/javascripts/app/views/import/kayako.jst.eco
 #: app/assets/javascripts/app/views/import/otrs.jst.eco
@@ -13902,6 +14034,9 @@ msgstr "van (relatief)"
 #: app/assets/javascripts/app/lib/app_post/pretty_date.coffee
 msgid "h"
 msgstr "h"
+
+msgid "has already been taken"
+msgstr ""
 
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
 #: app/assets/javascripts/app/controllers/_ui_element/core_workflow_condition.coffee
@@ -14026,17 +14161,37 @@ msgstr "is"
 msgid "is in working time"
 msgstr "is in werktijd"
 
+#, fuzzy
+#| msgid "Group is invalid!"
+msgid "is invalid"
+msgstr "Groep is niet geldig!"
+
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
 #: app/assets/javascripts/app/controllers/_ui_element/core_workflow_condition.coffee
 msgid "is not"
 msgstr "is niet"
 
+#, fuzzy
+#| msgid "Min. size of number"
+msgid "is not a number"
+msgstr "Min. aantalgrootte"
+
 #: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
 msgid "is not in working time"
 msgstr "is niet in werktijd"
 
+#, fuzzy
+#| msgid "is not in working time"
+msgid "is not included in the list"
+msgstr "is niet in werktijd"
+
 #: app/assets/javascripts/app/models/_application_model.coffee
 msgid "is required"
+msgstr "is vereist"
+
+#, fuzzy
+#| msgid "is required"
+msgid "is reserved"
 msgstr "is vereist"
 
 #: app/assets/javascripts/app/controllers/_ui_element/core_workflow_condition.coffee
@@ -14046,6 +14201,24 @@ msgstr "is ingesteld"
 #: app/assets/javascripts/app/views/translation/todo.jst.eco
 msgid "is the same"
 msgstr "is hetzelfde"
+
+msgid "is the wrong length (should be %{count} characters)"
+msgstr ""
+
+msgid "is the wrong length (should be 1 character)"
+msgstr ""
+
+msgid "is too long (maximum is %{count} characters)"
+msgstr ""
+
+msgid "is too long (maximum is 1 character)"
+msgstr ""
+
+msgid "is too short (minimum is %{count} characters)"
+msgstr ""
+
+msgid "is too short (minimum is 1 character)"
+msgstr ""
 
 #: app/assets/javascripts/app/lib/app_post/pretty_date.coffee
 msgid "just now"
@@ -14103,6 +14276,46 @@ msgstr "minuut"
 #: app/assets/javascripts/app/lib/app_post/pretty_date.coffee
 msgid "minutes"
 msgstr "minuten"
+
+msgid "must be accepted"
+msgstr ""
+
+msgid "must be an integer"
+msgstr ""
+
+#, fuzzy
+#| msgid "Group can't be blank"
+msgid "must be blank"
+msgstr "Groep mag niet leeg zijn"
+
+msgid "must be equal to %{count}"
+msgstr ""
+
+msgid "must be even"
+msgstr ""
+
+msgid "must be greater than %{count}"
+msgstr ""
+
+msgid "must be greater than or equal to %{count}"
+msgstr ""
+
+msgid "must be less than %{count}"
+msgstr ""
+
+msgid "must be less than or equal to %{count}"
+msgstr ""
+
+msgid "must be odd"
+msgstr ""
+
+msgid "must be other than %{count}"
+msgstr ""
+
+#, fuzzy
+#| msgid "does not exist"
+msgid "must exist"
+msgstr "bestaat niet"
 
 #: app/assets/javascripts/app/views/integration/cti.jst.eco
 #: app/assets/javascripts/app/views/integration/placetel.jst.eco
@@ -14417,6 +14630,7 @@ msgstr "timestamp - \"2018-08-30 14:30\""
 msgid "to go to the homepage."
 msgstr "om naar de startpagina te gaan."
 
+#: app/assets/javascripts/app/controllers/_ui_element/_application_selector.coffee
 #: app/assets/javascripts/app/controllers/_ui_element/basedate.coffee
 #: app/assets/javascripts/app/controllers/chat.coffee
 #: app/assets/javascripts/app/views/channel/chat.jst.eco
@@ -14504,10 +14718,14 @@ msgid "|Left| means |[Ticket#12345] Some Subject|"
 msgstr "|Links| betekent |[Ticket#12345] Onderwerp|"
 
 #: app/assets/javascripts/app/views/settings/ticket_hook_position.jst.eco
+#, fuzzy
+#| msgid ""
+#| "|None| means |Some Subject| (without ticket number), in which case you "
+#| "should enable \"postmaster___follow___up___search___in\" to recognize "
+#| "follow-ups based on email headers and/or body."
 msgid ""
-"|None| means |Some Subject| (without ticket number), in which case you "
-"should enable \"postmaster___follow___up___search___in\" to recognize follow-"
-"ups based on email headers and/or body."
+"|None| means |Some Subject| (without ticket number), in which case it "
+"recognizes follow-ups based on email headers."
 msgstr ""
 "|Geen| betekent |Een onderwerp| (zonder ticketnummer). In dat geval moet u "
 "\"postmaster___follow___up___search___in\" inschakelen om follow-ups op "
@@ -14532,6 +14750,12 @@ msgstr "…van geheel tekstvak"
 #: app/assets/javascripts/app/views/dashboard/stats/ticket_waiting_time.jst.eco
 msgid "∅ Waiting time today"
 msgstr "∅ Wachttijd vandaag"
+
+#~ msgid "Object already exists!"
+#~ msgstr "Object bestaat al!"
+
+#~ msgid "Enter more than two characters to get any results…"
+#~ msgstr "Typ meer dan twee karakters om resultaten te zien…"
 
 #~ msgid "Choose attributes and then save them as a new template."
 #~ msgstr "Kies attributen en sla ze vervolgens op als een nieuw sjabloon."
@@ -14817,9 +15041,6 @@ msgstr "∅ Wachttijd vandaag"
 
 #~ msgid "Couldn't save changes"
 #~ msgstr "Kan wijzigingen niet opslaan"
-
-#~ msgid "Group can't be blank"
-#~ msgstr "Groep mag niet leeg zijn"
 
 #~ msgid "Select..."
 #~ msgstr "Selecteer..."

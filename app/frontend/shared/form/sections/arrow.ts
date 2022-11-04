@@ -10,18 +10,15 @@ export const arrow = createSection('arrow', () => {
   return {
     $el: 'div',
     attrs: {
-      class: {
-        'formkit-arrow flex items-center': true,
-        'ltr:pr-2 rtl:pl-2': '$link',
-      },
+      class: '$classes.arrow',
     },
     children: [
       {
         $cmp: 'CommonIcon',
         props: {
-          fixedSize: { width: 24, height: 24 },
+          size: 'base',
           class: 'shrink-0',
-          name: `chevron-${
+          name: `mobile-chevron-${
             locale.localeData?.dir === 'rtl' ? 'left' : 'right'
           }`,
           decorative: true,

@@ -1,15 +1,18 @@
 // Copyright (C) 2012-2022 Zammad Foundation, https://zammad-foundation.org/
 
-import { computed, ref, type Ref } from 'vue'
+import { computed, ref, type Ref, watch } from 'vue'
 import { i18n } from '@shared/i18n'
-import { keyBy } from 'lodash-es'
+import { cloneDeep, keyBy } from 'lodash-es'
 import type { TicketState } from '@shared/entities/ticket/types'
-import type { SelectOptionSorting, SelectOption } from '../fields/FieldSelect'
+import type {
+  SelectOptionSorting,
+  SelectOption,
+  SelectValue,
+} from '../fields/FieldSelect'
 import type { FormFieldContext } from '../types/field'
 import type { FlatSelectOption } from '../fields/FieldTreeSelect'
 import type { AutoCompleteOption } from '../fields/FieldAutoComplete'
 import useValue from './useValue'
-import type { SelectValue } from '../fields/FieldSelect/types'
 
 const useSelectOptions = (
   options: Ref<SelectOption[] | FlatSelectOption[] | AutoCompleteOption[]>,
@@ -31,7 +34,7 @@ const useSelectOptions = (
 ) => {
   const dialog = ref<HTMLElement>()
 
-  const { currentValue } = useValue(context)
+  const { currentValue, hasValue, clearValue } = useValue(context)
 
   const hasStatusProperty = computed(
     () =>
@@ -96,7 +99,7 @@ const useSelectOptions = (
   const getSelectedOptionLabel = (selectedValue: SelectValue) => {
     const key = selectedValue.toString()
     const option = optionValueLookup.value[key]
-    return option?.label || selectedValue.toString()
+    return option?.label
   }
 
   const getSelectedOptionStatus = (selectedValue: SelectValue) => {
@@ -111,7 +114,7 @@ const useSelectOptions = (
     option: SelectOption | FlatSelectOption | AutoCompleteOption,
   ) => {
     if (context.value.multiple) {
-      const selectedValues = currentValue.value || []
+      const selectedValues = cloneDeep(currentValue.value) || []
       const optionIndex = selectedValues.indexOf(option.value)
       if (optionIndex !== -1) selectedValues.splice(optionIndex, 1)
       else selectedValues.push(option.value)
@@ -185,6 +188,23 @@ const useSelectOptions = (
     if (targetElement) targetElement.focus()
   }
 
+  // Setup a watcher to clear the value if the related option goes missing.
+  //   This will only kick-in on subsequent mutations of the options prop.
+  const setupClearMissingOptionValue = () => {
+    watch(
+      () => options.value,
+      () => {
+        if (
+          !hasValue.value ||
+          typeof optionValueLookup.value[currentValue.value] !== 'undefined'
+        )
+          return
+
+        clearValue()
+      },
+    )
+  }
+
   return {
     dialog,
     hasStatusProperty,
@@ -197,6 +217,7 @@ const useSelectOptions = (
     selectOption,
     getDialogFocusTargets,
     advanceDialogFocus,
+    setupClearMissingOptionValue,
   }
 }
 

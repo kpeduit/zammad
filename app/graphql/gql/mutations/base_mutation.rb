@@ -5,9 +5,6 @@ module Gql::Mutations
   class BaseMutation < GraphQL::Schema::Mutation
     include Gql::Concerns::HandlesAuthorization
     include Gql::Concerns::HasNestedGraphqlName
-    include Gql::Concerns::HandlesServices
-
-    include Gql::Mutations::Concerns::HandlesObjectAttributeValues
 
     # FIXME: Remove when all mutations are using services which are taking care of this flag.
     include Gql::Mutations::Concerns::HandlesCoreWorkflow

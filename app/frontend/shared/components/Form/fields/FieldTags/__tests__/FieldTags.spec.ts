@@ -1,7 +1,7 @@
 // Copyright (C) 2012-2022 Zammad Foundation, https://zammad-foundation.org/
 
 import { FormKit } from '@formkit/vue'
-import { getByText } from '@testing-library/vue'
+import { getByText, queryByRole } from '@testing-library/vue'
 import { renderComponent } from '@tests/support/components'
 import { getByIconName } from '@tests/support/components/iconQueries'
 import type { FieldTagsProps } from '../types'
@@ -36,7 +36,7 @@ describe('Form - Field - Tags', () => {
 
     const node = view.getByLabelText('Tags')
 
-    expect(node, 'empty field').toHaveTextContent(/^$/)
+    expect(queryByRole(node, 'list')).not.toBeInTheDocument()
 
     await view.events.click(node)
 
@@ -52,8 +52,13 @@ describe('Form - Field - Tags', () => {
     await view.events.click(options[0])
     await view.events.click(options[1])
 
-    expect(getByIconName(options[0], 'checked-yes')).toBeInTheDocument()
-    expect(getByIconName(options[1], 'checked-yes')).toBeInTheDocument()
+    expect(
+      getByIconName(options[0], 'mobile-check-box-yes'),
+    ).toBeInTheDocument()
+
+    expect(
+      getByIconName(options[1], 'mobile-check-box-yes'),
+    ).toBeInTheDocument()
 
     await view.events.click(view.getByRole('button', { name: 'Done' }))
 
@@ -82,7 +87,7 @@ describe('Form - Field - Tags', () => {
     await view.events.click(newOptions[0])
     await view.events.click(view.getByRole('button', { name: 'Done' }))
 
-    expect(node, "doesn't have any tags").toHaveTextContent(/^$/)
+    expect(queryByRole(node, 'list')).not.toBeInTheDocument()
   })
 
   it('filters options', async () => {
@@ -140,5 +145,21 @@ describe('Form - Field - Tags', () => {
     await view.events.click(createButton)
 
     expect(view.getByRole('button', { name: 'pay' })).toBeInTheDocument()
+  })
+
+  it("clicking disabled field doesn't select dialog", async () => {
+    const wrapper = renderFieldTags({ disabled: true })
+
+    await wrapper.events.click(wrapper.getByLabelText('Tags'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('clicking select without options opens select dialog', async () => {
+    const wrapper = renderFieldTags({ options: [] })
+
+    await wrapper.events.click(wrapper.getByLabelText('Tags'))
+
+    expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
   })
 })

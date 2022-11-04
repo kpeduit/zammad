@@ -4,20 +4,29 @@
 /* eslint-disable zammad/zammad-detect-translatable-string */
 
 import Form from '@shared/components/Form/Form.vue'
-import { defineFormSchema } from '@mobile/form/composable'
+import { defineFormSchema } from '@mobile/form/defineFormSchema'
 import { useDialog } from '@shared/composables/useDialog'
 import CommonButtonGroup from '@mobile/components/CommonButtonGroup/CommonButtonGroup.vue'
+import { useUserCreate } from '@mobile/entities/user/composables/useUserCreate'
 
 const linkSchemaRaw = [
   {
     type: 'textarea',
-    name: 'select',
+    name: 'textarea',
     label: 'Textarea',
   },
   {
     type: 'text',
     name: 'some_input',
     label: 'Input',
+    disabled: true,
+    required: true,
+  },
+  {
+    type: 'textarea',
+    name: 'select',
+    label: 'Textarea',
+    required: true,
   },
   {
     type: 'text',
@@ -70,6 +79,7 @@ const linkSchemaRaw = [
     label: 'TreeSelect',
     value: [0, 3, 5, 6, 1, 2, 8, 7],
     props: {
+      clearable: true,
       multiple: true,
       options: [
         {
@@ -140,7 +150,9 @@ const linkSchemaRaw = [
     type: 'select',
     name: 'select_1',
     label: 'Select 1',
+    disabled: true,
     props: {
+      link: '/',
       options: [
         {
           value: 0,
@@ -171,7 +183,7 @@ const linkSchemaRaw = [
       sorting: 'label',
       link: '/tickets',
       action: '/tickets',
-      actionIcon: 'new-customer',
+      actionIcon: 'mobile-new-customer',
       gqlQuery: `
 query autocompleteSearchUser($query: String!, $limit: Int) {
   autocompleteSearchUser(query: $query, limit: $limit) {
@@ -268,6 +280,8 @@ const dialog = useDialog({
   name: 'dialog',
   component: () => import('@mobile/components/CommonDialog/CommonDialog.vue'),
 })
+
+const { openCreateUserDialog } = useUserCreate()
 </script>
 
 <template>
@@ -276,12 +290,15 @@ const dialog = useDialog({
       Dialog
     </button>
 
+    <!-- TODO where to put this? -->
+    <button @click="openCreateUserDialog()">Create user</button>
+
     <CommonButtonGroup
       class="py-4"
       :options="[
-        { label: 'Merge tickets', icon: 'home' },
-        { label: 'Subscribe', icon: 'home', selected: true },
-        { label: 'Ticket info', icon: 'home' },
+        { label: 'Merge tickets', icon: 'mobile-home' },
+        { label: 'Subscribe', icon: 'mobile-home', selected: true },
+        { label: 'Ticket info', icon: 'mobile-home' },
       ]"
     />
 
@@ -292,9 +309,9 @@ const dialog = useDialog({
       type="radio"
       :buttons="true"
       :options="[
-        { label: 'Incoming Phone', value: 1, icon: 'received-calls' },
-        { label: 'Outgoing Phone', value: 2, icon: 'outbound-calls' },
-        { label: 'Send Email', value: 3, icon: 'email' },
+        { label: 'Incoming Phone', value: 1, icon: 'mobile-phone-in' },
+        { label: 'Outgoing Phone', value: 2, icon: 'mobile-phone-out' },
+        { label: 'Send Email', value: 3, icon: 'mobile-mail-out' },
       ]"
     />
   </div>

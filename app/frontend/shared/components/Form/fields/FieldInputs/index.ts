@@ -10,6 +10,8 @@ import {
   textInput,
 } from '@formkit/inputs'
 import initializeFieldDefinition from '@shared/form/core/initializeFieldDefinition'
+import addLink from '@shared/form/features/addLink'
+import formUpdaterTrigger from '@shared/form/features/formUpdaterTrigger'
 import type {
   FormFieldsTypeDefinition,
   FormFieldType,
@@ -29,7 +31,7 @@ const inputFields: FormFieldType[] = []
 Object.keys(inputFieldDefinitionList).forEach((inputType) => {
   initializeFieldDefinition(
     inputFieldDefinitionList[inputType],
-    {},
+    { features: [addLink, formUpdaterTrigger('delayed')] },
     { schema: textInput },
   )
 

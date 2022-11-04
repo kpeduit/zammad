@@ -6,10 +6,11 @@ import type { SearchPlugin } from './index'
 export default <SearchPlugin>{
   model: 'Ticket',
   headerLabel: __('Tickets'),
+  searchLabel: __('Tickets with "%s"'),
   component: TicketItem,
   link: '/tickets/#{internalId}',
   permissions: ['ticket.agent', 'ticket.customer'],
-  icon: { name: 'stack', size: 'base' },
+  icon: { name: 'mobile-all-tickets', size: 'base' },
   iconBg: 'bg-blue',
   order: 100,
 }

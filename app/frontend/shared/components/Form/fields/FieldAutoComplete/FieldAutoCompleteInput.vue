@@ -4,9 +4,10 @@
 import { markRaw, ref, toRef } from 'vue'
 import { i18n } from '@shared/i18n'
 import { useDialog } from '@shared/composables/useDialog'
+import type { ObjectLike } from '@shared/types/utils'
+import { useFormBlock } from '@mobile/form/useFormBlock'
 import useValue from '../../composables/useValue'
 import useSelectOptions from '../../composables/useSelectOptions'
-import useSelectAutoselect from '../../composables/useSelectAutoselect'
 import type { FormFieldContext } from '../../types/field'
 import type { AutoCompleteOption, AutoCompleteProps } from './types'
 
@@ -19,10 +20,10 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const contextReactive = toRef(props, 'context')
 
-const { hasValue, valueContainer, clearValue } = useValue(
-  toRef(props, 'context'),
-)
+const { hasValue, valueContainer, currentValue, clearValue } =
+  useValue(contextReactive)
 
 const localOptions = ref(props.context.options || [])
 
@@ -45,11 +46,32 @@ const openModal = () => {
     onUpdateOptions: (options: AutoCompleteOption[]) => {
       localOptions.value = options
     },
+    onAction() {
+      props.context.onActionClick?.()
+    },
   })
 }
 
-const { sortedOptions, getSelectedOptionIcon, getSelectedOptionLabel } =
-  useSelectOptions(localOptions, toRef(props, 'context'))
+const { getSelectedOptionIcon, getSelectedOptionLabel } = useSelectOptions(
+  localOptions,
+  toRef(props, 'context'),
+)
+
+// Initial options prefill for non-multiple fields (multiple fields needs to be handled in the form updater).
+if (
+  !props.context.multiple &&
+  hasValue.value &&
+  props.context.initialOptionBuilder &&
+  !getSelectedOptionLabel(currentValue.value)
+) {
+  const initialOption = props.context.initialOptionBuilder(
+    props.context.node.at('$root')?.context?.initialEntityObject as ObjectLike,
+    currentValue.value,
+    props.context,
+  )
+
+  if (initialOption) localOptions.value.push(initialOption)
+}
 
 const toggleDialog = async (isVisible: boolean) => {
   if (isVisible) {
@@ -60,54 +82,62 @@ const toggleDialog = async (isVisible: boolean) => {
   await dialog.close()
 }
 
-useSelectAutoselect(sortedOptions, toRef(props, 'context'))
+const onInputClick = () => {
+  if (dialog.isOpened.value) return
+  toggleDialog(true)
+}
+
+useFormBlock(contextReactive, onInputClick)
 </script>
 
 <template>
   <div
     :class="{
       [context.classes.input]: true,
+      'ltr:pr-9 rtl:pl-9': context.clearable && hasValue && !context.disabled,
     }"
-    class="flex h-auto rounded-none bg-transparent focus-within:bg-blue-highlight focus-within:pt-0 formkit-populated:pt-0"
+    class="flex h-auto rounded-none bg-transparent"
     data-test-id="field-autocomplete"
   >
     <output
       :id="context.id"
       :name="context.node.name"
-      class="flex grow cursor-pointer items-center focus:outline-none formkit-disabled:pointer-events-none ltr:pr-3 rtl:pl-3"
+      class="flex grow cursor-pointer items-center focus:outline-none formkit-disabled:pointer-events-none"
       :aria-disabled="context.disabled"
       :aria-label="i18n.t('Select…')"
       :tabindex="context.disabled ? '-1' : '0'"
-      v-bind="context.attrs"
-      role="list"
-      @click="toggleDialog(true)"
+      v-bind="{
+        ...context.attrs,
+        onBlur: undefined,
+      }"
       @keypress.space="toggleDialog(true)"
       @blur="context.handlers.blur"
     >
-      <div class="flex grow flex-wrap gap-1">
-        <template v-if="hasValue">
-          <div
-            v-for="selectedValue in valueContainer"
-            :key="selectedValue"
-            class="flex items-center text-base leading-[19px] after:content-[','] last:after:content-none"
-            role="listitem"
-          >
-            <CommonIcon
-              v-if="getSelectedOptionIcon(selectedValue)"
-              :name="getSelectedOptionIcon(selectedValue)"
-              :fixed-size="{ width: 12, height: 12 }"
-              class="mr-1"
-            />
-            {{ getSelectedOptionLabel(selectedValue) || selectedValue }}
-          </div>
-        </template>
+      <div v-if="hasValue" class="flex grow flex-wrap gap-1" role="list">
+        <div
+          v-for="selectedValue in valueContainer"
+          :key="selectedValue"
+          class="flex items-center text-base leading-[19px] after:content-[','] last:after:content-none"
+          role="listitem"
+        >
+          <CommonIcon
+            v-if="getSelectedOptionIcon(selectedValue)"
+            :name="getSelectedOptionIcon(selectedValue)"
+            size="tiny"
+            class="mr-1"
+          />
+          {{
+            getSelectedOptionLabel(selectedValue) ||
+            i18n.t('%s (unknown)', selectedValue)
+          }}
+        </div>
       </div>
       <CommonIcon
         v-if="context.clearable && hasValue && !context.disabled"
         :aria-label="i18n.t('Clear Selection')"
-        :fixed-size="{ width: 16, height: 16 }"
-        class="mr-2 shrink-0"
-        name="close-small"
+        class="absolute -mt-5 shrink-0 text-gray ltr:right-2 rtl:left-2"
+        name="mobile-close-small"
+        size="base"
         role="button"
         tabindex="0"
         @click.stop="clearValue"

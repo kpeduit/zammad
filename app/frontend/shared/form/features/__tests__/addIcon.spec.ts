@@ -4,8 +4,8 @@ import { createNode } from '@formkit/core'
 import { createLibraryPlugin } from '@formkit/inputs'
 import addIcon from '../addIcon'
 
-describe('translateWrapperProps', () => {
-  it('can translate the label, placeholder (as a prop) and help text', () => {
+describe('hideIcon', () => {
+  it('can show icon inside of a text field', () => {
     const node = createNode({
       plugins: [
         createLibraryPlugin({
@@ -19,7 +19,7 @@ describe('translateWrapperProps', () => {
       props: {
         type: 'text',
         label: 'example',
-        icon: 'eye',
+        icon: 'mobile-show',
         onIconClick: vi.fn(),
       },
     })

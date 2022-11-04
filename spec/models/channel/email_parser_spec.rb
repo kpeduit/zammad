@@ -305,7 +305,7 @@ RSpec.describe Channel::EmailParser, type: :model do
           To: baz@qux.net
           Subject: Foo
 
-          Lorem ipsum dolor <a data-mention-user-id=\"#{agent.id}\">agent</a>
+          Lorem ipsum dolor <a data-mention-user-id="#{agent.id}">agent</a>
         RAW
 
         it 'creates a ticket and article without mentions and no exception raised' do
@@ -361,7 +361,7 @@ RSpec.describe Channel::EmailParser, type: :model do
             Subject: no reference
             Date: Sun, 30 Aug 2015 23:20:54 +0200
             To: Martin Edenhofer <me@zammad.com>
-            Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+            Mime-Version: 1.0 (Mac OS X Mail 8.2 (2104))
             X-Mailer: Apple Mail (2.2104)
 
 
@@ -391,7 +391,7 @@ RSpec.describe Channel::EmailParser, type: :model do
             Subject: no reference
             Date: Sun, 30 Aug 2015 23:20:54 +0200
             To: Martin Edenhofer <me@zammad.com>
-            Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+            Mime-Version: 1.0 (Mac OS X Mail 8.2 (2104))
             X-Mailer: Apple Mail (2.2104)
 
 
@@ -421,7 +421,7 @@ RSpec.describe Channel::EmailParser, type: :model do
             Subject: no reference
             Date: Sun, 30 Aug 2015 23:20:54 +0200
             To: Martin Edenhofer <me@zammad.com>
-            Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+            Mime-Version: 1.0 (Mac OS X Mail 8.2 (2104))
             X-Mailer: Apple Mail (2.2104)
 
 
@@ -451,7 +451,7 @@ RSpec.describe Channel::EmailParser, type: :model do
             Subject: no reference
             Date: Sun, 30 Aug 2015 23:20:54 +0200
             To: Martin Edenhofer <me@zammad.com>
-            Mime-Version: 1.0 (Mac OS X Mail 8.2 \(2104\))
+            Mime-Version: 1.0 (Mac OS X Mail 8.2 (2104))
             X-Mailer: Apple Mail (2.2104)
 
 
@@ -1326,7 +1326,7 @@ RSpec.describe Channel::EmailParser, type: :model do
         Content-Type: #{content_type}
         MIME-Version: 1.0
 
-        no HTML <script type="text/javascript">alert(\'XSS\')</script>
+        no HTML <script type="text/javascript">alert('XSS')</script>
       RAW
 
       context 'for Content-Type: text/html' do
@@ -1342,7 +1342,7 @@ RSpec.describe Channel::EmailParser, type: :model do
 
         it 'leaves body as-is' do
           expect(article.body).to eq(<<~SANITIZED.chomp)
-            no HTML <script type="text/javascript">alert(\'XSS\')</script>
+            no HTML <script type="text/javascript">alert('XSS')</script>
           SANITIZED
         end
       end
@@ -1529,7 +1529,7 @@ RSpec.describe Channel::EmailParser, type: :model do
           body = <<~BODY
             Dear Smith Sepp,
 
-            Unfortunately your email titled \"Gruß aus Oberalteich\" could not be delivered to one or more recipients.
+            Unfortunately your email titled "Gruß aus Oberalteich" could not be delivered to one or more recipients.
 
             Your message was 0.01 MB but we only accept messages up to 10 MB.
 
@@ -1552,7 +1552,7 @@ RSpec.describe Channel::EmailParser, type: :model do
           body = <<~BODY
             Hallo Smith Sepp,
 
-            Ihre E-Mail mit dem Betreff \"Gruß aus Oberalteich\" konnte nicht an einen oder mehrere Empfänger zugestellt werden.
+            Ihre E-Mail mit dem Betreff "Gruß aus Oberalteich" konnte leider nicht an einen oder mehrere Empfänger zugestellt werden.
 
             Die Nachricht hatte eine Größe von 0.01 MB, wir akzeptieren jedoch nur E-Mails mit einer Größe von bis zu 10 MB.
 
@@ -1622,6 +1622,22 @@ RSpec.describe Channel::EmailParser, type: :model do
       it 'returns nil' do
         expect(described_class.mail_to_group(address)).to be_nil
       end
+    end
+  end
+
+  describe 'Updating group settings causes huge numbers of delayed jobs #4306', searchindex: true do
+    let(:new_email) { <<~RAW.chomp }
+      From: Max Smith <customer@example.com>
+      To: myzammad@example.com
+      Subject: test sender name update 2
+
+      Some Text
+    RAW
+
+    it 'does create search index jobs for new email tickets' do
+      ticket, = described_class.new.process({}, new_email)
+      job = Delayed::Job.all.detect { |row| YAML.load(row.handler).job_data['arguments'] == ['Ticket', ticket.id] } # rubocop:disable Security/YAMLLoad
+      expect(job).to be_present
     end
   end
 end

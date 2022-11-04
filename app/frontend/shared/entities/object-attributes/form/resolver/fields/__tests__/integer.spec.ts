@@ -12,11 +12,13 @@ describe('FieldResovlerInput', () => {
         min: 1,
         max: 100,
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'Count',
       name: 'count',
+      required: false,
       props: {
         min: 1,
         max: 100,

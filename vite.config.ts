@@ -19,38 +19,24 @@ export default defineConfig(({ mode, command }) => {
   const require = createRequire(import.meta.url)
 
   const svgPlugin = createSvgIconsPlugin({
-    // Specify the icon folder to be cached
-    iconDirs: [path.resolve(process.cwd(), `public/assets/images/icons`)],
-    // Specify symbolId format
+    // Specify the directory containing all icon assets assorted by sets.
+    iconDirs: [
+      path.resolve(
+        __dirname,
+        'app/frontend/shared/components/CommonIcon/assets',
+      ),
+    ],
+
+    // Specify symbolId format to include directory as icon set and filename as icon name.
     symbolId: 'icon-[dir]-[name]',
+
     svgoOptions: {
-      plugins: [
-        { name: 'preset-default' },
-        {
-          name: 'removeAttributesBySelector',
-          params: {
-            selectors: [
-              {
-                selector: "[fill='#50E3C2']",
-                attributes: 'fill',
-              },
-              // TODO: we need to add a own plugin or add some identifier to the svg files, to add the same functionality
-              // like we have in the old gulp script (fill='#50E3C2'] + parent fill='none' should be removed).
-            ],
-          },
-        },
-        {
-          name: 'convertColors',
-          params: {
-            currentColor: /(#BD0FE1|#BD10E0)/,
-          },
-        },
-      ],
+      plugins: [{ name: 'preset-default' }],
     } as ViteSvgIconsPlugin['svgoOptions'],
   })
 
   if (isStory) {
-    // paching svg plugin for stories, because it's not working with ssr
+    // Patch svg plugin for stories, because it's not working with SSR.
     const svgConfigResolved = svgPlugin.configResolved as (
       cfg: ResolvedConfig,
     ) => void
@@ -80,10 +66,11 @@ export default defineConfig(({ mode, command }) => {
   // Ruby plugin is not needed inside of the vitest context and has some side effects.
   if (!isTesting || isBuild) {
     const { default: RubyPlugin } = require('vite-plugin-ruby')
-    const ManualChunks = require('./app/frontend/build/manualChunks')
+    // const ManualChunks = require('./app/frontend/build/manualChunks')
 
     plugins.push(RubyPlugin())
-    plugins.push(ManualChunks())
+    // TODO: Disable manual chunks for now, check if it's still neded with Vite 3.0.
+    // plugins.push(ManualChunks())
   }
 
   return {
@@ -118,6 +105,7 @@ export default defineConfig(({ mode, command }) => {
       dir: 'app/frontend',
       setupFiles: ['app/frontend/tests/vitest.setup.ts'],
       environment: 'jsdom',
+      clearMocks: true,
       css: false,
       testTimeout: 30_000,
     },

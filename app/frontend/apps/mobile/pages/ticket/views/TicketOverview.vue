@@ -13,6 +13,7 @@ import { useApplicationStore } from '@shared/stores/application'
 import { useSessionStore } from '@shared/stores/session'
 import { useRouteQuery } from '@vueuse/router'
 import { storeToRefs } from 'pinia'
+import type { Sizes } from '@shared/components/CommonIcon/types'
 import TicketList from '../components/TicketList/TicketList.vue'
 
 const application = useApplicationStore()
@@ -144,28 +145,25 @@ const directionOptions = computed(() => [
   {
     value: EnumOrderDirection.Descending,
     label: __('descending'),
-    icon: 'long-arrow-down',
+    icon: 'mobile-arrow-down',
     iconProps: {
-      size: 'tiny' as const,
       class: {
         'text-blue': orderDirection.value === EnumOrderDirection.Descending,
       },
-      fixedSize: { width: 12, height: 12 },
+      size: 'tiny' as Sizes,
     },
   },
   {
     value: EnumOrderDirection.Ascending,
     label: __('ascending'),
-    icon: 'long-arrow-down',
+    icon: 'mobile-arrow-up',
     iconProps: {
-      size: 'tiny' as const,
       class: [
-        'rotate-180',
         {
           'text-blue': orderDirection.value === EnumOrderDirection.Ascending,
         },
       ],
-      fixedSize: { width: 12, height: 12 },
+      size: 'tiny' as Sizes,
     },
   },
 ])
@@ -180,16 +178,16 @@ const directionOptions = computed(() => [
         >
           <CommonBackButton fallback="/" />
         </div>
-        <div
+        <h1
           class="flex flex-1 items-center justify-center text-center text-lg font-bold"
         >
           {{ $t('Tickets') }}
-        </div>
+        </h1>
         <div
           class="flex cursor-pointer items-center justify-self-end text-base"
         >
           <CommonLink link="/#ticket/create">
-            <CommonIcon name="plus" size="small" />
+            <CommonIcon name="mobile-add" size="small" />
           </CommonLink>
         </div>
       </div>
@@ -202,7 +200,6 @@ const directionOptions = computed(() => [
           name="overview"
           type="select"
           size="small"
-          :classes="{ wrapper: 'px-0' }"
           :model-value="selectedOverviewLink"
           :options="optionsOverviews"
           no-options-label-translation
@@ -229,12 +226,12 @@ const directionOptions = computed(() => [
             >
               <div>
                 <CommonIcon
-                  name="long-arrow-down"
-                  :class="{
-                    'rotate-180':
-                      orderDirection === EnumOrderDirection.Ascending,
-                  }"
-                  :fixed-size="{ width: 12, height: 12 }"
+                  :name="
+                    orderDirection === EnumOrderDirection.Ascending
+                      ? 'mobile-arrow-up'
+                      : 'mobile-arrow-down'
+                  "
+                  size="tiny"
                 />
               </div>
               <span class="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -287,7 +284,7 @@ const directionOptions = computed(() => [
       />
     </CommonLoader>
     <div v-else class="flex items-center justify-center gap-2 p-4 text-center">
-      <CommonIcon class="text-red" name="close-small" />
+      <CommonIcon class="text-red" name="mobile-close-small" />
       {{ $t('Currently no overview is assigned to your roles.') }}
     </div>
   </div>

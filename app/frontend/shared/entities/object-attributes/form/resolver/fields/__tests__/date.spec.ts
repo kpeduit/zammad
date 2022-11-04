@@ -11,11 +11,13 @@ describe('FieldResolverDate', () => {
       dataOption: {
         // TODO ...
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'Date',
       name: 'date',
+      required: false,
       props: {},
       type: 'date',
     })

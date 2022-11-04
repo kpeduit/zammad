@@ -2,13 +2,13 @@
 
 import createInput from '@shared/form/core/createInput'
 import addLink from '@shared/form/features/addLink'
+import formUpdaterTrigger from '@shared/form/features/formUpdaterTrigger'
 import FieldAutoCompleteInput from './FieldAutoCompleteInput.vue'
 
 export const autoCompleteProps = [
   'action',
   'actionIcon',
   'allowUnknownValues',
-  'autoselect',
   'clearable',
   'debounceInterval',
   'filterInputPlaceholder',
@@ -16,15 +16,17 @@ export const autoCompleteProps = [
   'limit',
   'multiple',
   'noOptionsLabelTranslation',
+  'belongsToObjectField',
   'optionIcon',
   'options',
+  'initialOptionBuilder',
   'sorting',
 ]
 
 const fieldDefinition = createInput(
   FieldAutoCompleteInput,
   [...autoCompleteProps, 'gqlQuery'],
-  { features: [addLink] },
+  { features: [addLink, formUpdaterTrigger()] },
   { addArrow: true },
 )
 

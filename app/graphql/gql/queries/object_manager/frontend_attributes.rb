@@ -38,13 +38,22 @@ module Gql::Queries
       def frontend_attribute_fields(element)
         attribute = element.attribute
 
+        add_belongs_to_for_relation_attributes(attribute)
+
         {
           name:        attribute[:name],
           display:     attribute[:display],
           data_type:   attribute[:data_type],
           data_option: attribute[:data_option],
           screens:     element.screens,
+          is_internal: !attribute[:editable],
         }
+      end
+
+      def add_belongs_to_for_relation_attributes(attribute)
+        return if attribute[:data_option][:relation].blank? || attribute[:data_option][:belongs_to].present?
+
+        attribute[:data_option][:belongs_to] = attribute[:name].humanize(capitalize: false)
       end
 
       def check_attribute_frontend_screens(frontend_screens, screens, name)

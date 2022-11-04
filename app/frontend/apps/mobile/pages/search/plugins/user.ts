@@ -6,10 +6,11 @@ import type { SearchPlugin } from './index'
 export default <SearchPlugin>{
   model: 'User',
   headerLabel: __('Users'),
+  searchLabel: __('Users with "%s"'),
   component: UserItem,
   order: 200,
   link: '/users/#{internalId}',
   permissions: ['ticket.agent'],
-  icon: { name: 'user', size: 'base' },
+  icon: { name: 'mobile-person', size: 'base' },
   iconBg: 'bg-pink',
 }

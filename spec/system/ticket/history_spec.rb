@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Ticket history', type: :system, time_zone: 'Europe/London', authenticated_as: :admin_de do
+RSpec.describe 'Ticket history', authenticated_as: :admin_de, time_zone: 'Europe/London', type: :system do
   let(:group)    { create(:group) }
   let(:ticket)   { create(:ticket, group: group) }
   let(:admin_de) { create(:admin, :groupable, preferences: { locale: 'de-de' }, group: group) }
@@ -34,6 +34,8 @@ RSpec.describe 'Ticket history', type: :system, time_zone: 'Europe/London', auth
     ticket.update! first_response_escalation_at: current_time
 
     travel_back
+
+    visit '/'
 
     # Suppress the modal dialog that invites to contributions for translations that are < 90% as this breaks the tests for de-de.
     page.evaluate_script "App.LocalStorage.set('translation_support_no', true, App.Session.get('id'))"

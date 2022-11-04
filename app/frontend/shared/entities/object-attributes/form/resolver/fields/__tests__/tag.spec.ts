@@ -11,11 +11,13 @@ describe('FieldResolverTag', () => {
       dataOption: {
         // TODO ...
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'Tag',
       name: 'tag',
+      required: false,
       props: {},
       type: 'tag',
     })

@@ -2,20 +2,22 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Search', type: :system, authenticated: true, searchindex: true do
-  let(:group_1)               { create :group }
-  let(:group_2)               { create :group }
-  let(:macro_without_group)   { create :macro }
-  let(:macro_note)            { create :macro, name: 'Macro note', perform: { 'article.note'=>{ 'body' => 'macro body', 'internal' => 'true', 'subject' => 'macro note' } } }
-  let(:macro_group1)          { create :macro, groups: [group_1] }
-  let(:macro_group2)          { create :macro, groups: [group_2] }
-  let!(:ticket_1)             { create :ticket, title: 'Testing Ticket 1', group: group_1 }
-  let!(:ticket_2)             { create :ticket, title: 'Testing Ticket 2', group: group_2 }
+RSpec.describe 'Search', authenticated: true, searchindex: true, type: :system do
+  let(:group_1)               { create(:group) }
+  let(:group_2)               { create(:group) }
+  let(:macro_without_group)   { create(:macro) }
+  let(:macro_note)            { create(:macro, name: 'Macro note', perform: { 'article.note'=>{ 'body' => 'macro body', 'internal' => 'true', 'subject' => 'macro note' } }) }
+  let(:macro_group1)          { create(:macro, groups: [group_1]) }
+  let(:macro_group2)          { create(:macro, groups: [group_2]) }
+  let!(:ticket_1)             { create(:ticket, title: 'Testing Ticket 1', group: group_1) }
+  let!(:ticket_2)             { create(:ticket, title: 'Testing Ticket 2', group: group_2) }
   let(:note)                  { 'Test note' }
 
   before do
     ticket_1 && ticket_2
     searchindex_model_reload([::Ticket, ::Organization, ::User])
+
+    visit '/'
   end
 
   it 'shows default widgets' do
@@ -151,9 +153,9 @@ RSpec.describe 'Search', type: :system, authenticated: true, searchindex: true d
   end
 
   context 'with ticket search result for macros bulk action', authenticated_as: :authenticate do
-    let(:group_3)      { create :group }
+    let(:group_3)      { create(:group) }
     let(:search_query) { 'Testing' }
-    let!(:ticket_3)    { create :ticket, title: 'Testing Ticket 3', group: group_3 }
+    let!(:ticket_3)    { create(:ticket, title: 'Testing Ticket 3', group: group_3) }
     let(:agent)        { create(:agent, groups: Group.all) }
 
     before do
@@ -161,6 +163,8 @@ RSpec.describe 'Search', type: :system, authenticated: true, searchindex: true d
       click_on 'Show Search Details'
 
       find('[data-tab-content=Ticket]').click
+
+      await_empty_ajax_queue
     end
 
     describe 'group-dependent macros' do
@@ -234,7 +238,7 @@ RSpec.describe 'Search', type: :system, authenticated: true, searchindex: true d
 
       def authenticate
         ticket_1 && ticket_2
-        Macro.destroy_all && (create_list :macro, all)
+        Macro.destroy_all && create_list(:macro, all)
         agent
       end
 
@@ -486,6 +490,80 @@ RSpec.describe 'Search', type: :system, authenticated: true, searchindex: true d
 
       it 'does show the correct owner selection for each bulk action' do
         check_owner_field
+      end
+    end
+  end
+
+  # https://github.com/zammad/zammad/issues/4264
+  describe 'Keeps selected sorting' do
+    before do
+      fill_in id: 'global-search', with: 'Nico'
+
+      click_on 'Show Search Details'
+
+      find('.table-column-title', text: 'TITLE').click
+    end
+
+    it 'when switching to other taskbar keep sorting' do
+      visit "ticket/zoom/#{Ticket.first.id}"
+
+      click_on 'Nico'
+
+      wait_for_rerender
+
+      within('.table-column-head', text: 'TITLE') do
+        expect(page).to have_css('.table-sort-arrow')
+      end
+    end
+
+    it 'when switching to other search tab keep sorting' do
+      within :active_content do
+        find('.js-tab', text: 'User').click
+        find('.js-tab', text: 'Ticket').click
+      end
+
+      # no need to wait for rerender in this case
+
+      within('.table-column-head', text: 'TITLE') do
+        expect(page).to have_css('.table-sort-arrow')
+      end
+    end
+
+    it 'when changing search query clear sorting' do
+      within :active_content do
+        find('.js-search').fill_in with: 'Nicole'
+      end
+
+      wait_for_rerender
+
+      within('.table-column-head', text: 'TITLE') do
+        expect(page).to have_no_css('.table-sort-arrow')
+      end
+    end
+
+    it 'when changing search query after navigation away-and-back clear sorting' do
+      visit "ticket/zoom/#{Ticket.first.id}"
+
+      click_on 'Nico'
+
+      within :active_content do
+        find('.js-search').fill_in with: 'Nicole'
+      end
+
+      wait_for_rerender
+
+      within('.table-column-head', text: 'TITLE') do
+        expect(page).to have_no_css('.table-sort-arrow')
+      end
+    end
+
+    def wait_for_rerender
+      elem = find('.detail-search table')
+
+      wait.until do
+        elem.base.obscured?
+      rescue *page.driver.invalid_element_errors
+        true
       end
     end
   end

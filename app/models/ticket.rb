@@ -181,6 +181,7 @@ returns
   end
 
   def auto_assign(user)
+    return if !persisted?
     return if Setting.get('ticket_auto_assignment').blank?
     return if owner_id != 1
     return if !TicketPolicy.new(user, self).full?
@@ -191,7 +192,14 @@ returns
     ticket_auto_assignment_selector = Setting.get('ticket_auto_assignment_selector')
     return if ticket_auto_assignment_selector.blank?
 
-    ticket_count, = Ticket.selectors(ticket_auto_assignment_selector[:condition], limit: 1, current_user: user, access: 'full')
+    condition = ticket_auto_assignment_selector[:condition].merge(
+      'ticket.id' => {
+        'operator' => 'is',
+        'value'    => id,
+      }
+    )
+
+    ticket_count, = Ticket.selectors(condition, limit: 1, current_user: user, access: 'full')
     return if ticket_count.to_i.zero?
 
     update!(owner: user)
@@ -640,10 +648,10 @@ condition example
 
       selector = selector_raw.stringify_keys
       raise "Invalid selector, operator missing #{selector.inspect}" if !selector['operator']
-      raise "Invalid selector, operator #{selector['operator']} is invalid #{selector.inspect}" if !selector['operator'].match?(%r{^(is|is\snot|contains|contains\s(not|all|one|all\snot|one\snot)|(after|before)\s\(absolute\)|(within\snext|within\slast|after|before|till|from)\s\(relative\))|(is\sin\sworking\stime|is\snot\sin\sworking\stime)$})
+      raise "Invalid selector, operator #{selector['operator']} is invalid #{selector.inspect}" if !selector['operator'].match?(%r{^(is|is\snot|contains|contains\s(not|all|one|all\snot|one\snot)|today|(after|before)\s\(absolute\)|(within\snext|within\slast|after|before|till|from)\s\(relative\))|(is\sin\sworking\stime|is\snot\sin\sworking\stime)$})
 
       # validate value / allow blank but only if pre_condition exists and is not specific
-      if !selector.key?('value') ||
+      if (selector['operator'] != 'today' && !selector.key?('value')) ||
          (selector['value'].instance_of?(Array) && selector['value'].respond_to?(:blank?) && selector['value'].blank?) ||
          (selector['operator'].start_with?('contains') && selector['value'].respond_to?(:blank?) && selector['value'].blank?)
         return nil if selector['pre_condition'].nil?
@@ -877,6 +885,15 @@ condition example
           bind_params.push selector['value']
         elsif Ticket.column_names.include?(attributes[1])
           query += SqlHelper.new(object: Ticket).array_contains_one(attributes[1], selector['value'], negated: true)
+        end
+      elsif selector['operator'] == 'today'
+        Time.use_zone(Setting.get('timezone_default').presence) do
+          day_start = Time.zone.now.beginning_of_day.utc
+          day_end   = Time.zone.now.end_of_day.utc
+
+          query += "#{attribute} BETWEEN ? AND ?"
+          bind_params.push day_start
+          bind_params.push day_end
         end
       elsif selector['operator'] == 'before (absolute)'
         query += "#{attribute} <= ?"

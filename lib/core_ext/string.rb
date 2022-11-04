@@ -321,6 +321,10 @@ class String
 
   def html2html_strict
     string = dup
+
+    # https://github.com/zammad/zammad/issues/4112
+    string.gsub!(%r{<!\[if !supportLists\]>.+?<!\[endif\]>}mi, '• ')
+
     string = HtmlSanitizer.strict(string, true).strip
     string = HtmlSanitizer.cleanup(string).strip
 
@@ -348,12 +352,6 @@ class String
     string.gsub!(%r{\A(<br(|/)>[[:space:]]*)*}i, '')
     string.gsub!(%r{[[:space:]]*(<br(|/)>[[:space:]]*)*\Z}i, '')
     string.gsub!(%r{(<p></p>){1,10}\Z}i, '')
-
-    # https://github.com/zammad/zammad/issues/4112
-    string.gsub!(%r{&lt;!\[if !supportLists\]&gt;.+?&lt;!\[endif\]&gt;}, '• ')
-
-    # https://github.com/zammad/zammad/issues/4184
-    string.gsub!(%r{&lt;!\[if !\w+\]&gt;(.+?)&lt;!\[endif\]&gt;}, '\1')
 
     string.signature_identify('html')
 
@@ -439,7 +437,7 @@ class String
     # Objet : xxx
     # en/de/fr | sometimes ms adds a space to "xx : value"
     map['ms-en-de-fr_from'] = '^(Von|From|De|от|Z|Od|Ze|Fra|Van|Mistä|Από|Dal|から|Из|од|iz|Från|จาก|з|Từ)( ?):[[:space:]].+?'
-    map['ms-en-de-fr_from_html'] = "\n######b######(From|Von|De)([[:space:]]?):([[:space:]]?)(######\/b######)[[:space:]].+?"
+    map['ms-en-de-fr_from_html'] = "\n######b######(From|Von|De)([[:space:]]?):([[:space:]]?)(######/b######)[[:space:]].+?"
 
     # word 14
     # edv hotline wrote:

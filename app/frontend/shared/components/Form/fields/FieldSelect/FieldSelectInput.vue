@@ -1,13 +1,15 @@
 <!-- Copyright (C) 2012-2022 Zammad Foundation, https://zammad-foundation.org/ -->
 
 <script setup lang="ts">
-import { computed, toRef } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import { i18n } from '@shared/i18n'
 import CommonTicketStateIndicator from '@shared/components/CommonTicketStateIndicator/CommonTicketStateIndicator.vue'
 import CommonSelect from '@mobile/components/CommonSelect/CommonSelect.vue'
+import type { CommonSelectInstance } from '@mobile/components/CommonSelect/types'
+import { useFormBlock } from '@mobile/form/useFormBlock'
 import useValue from '../../composables/useValue'
 import useSelectOptions from '../../composables/useSelectOptions'
-import useSelectAutoselect from '../../composables/useSelectAutoselect'
+import useSelectPreselect from '../../composables/useSelectPreselect'
 import type { SelectContext } from './types'
 import FieldSelectInputSelected from './FieldSelectInputSelected.vue'
 
@@ -21,7 +23,6 @@ const contextReactive = toRef(props, 'context')
 
 const { hasValue, valueContainer, currentValue, clearValue } =
   useValue(contextReactive)
-
 const {
   hasStatusProperty,
   sortedOptions,
@@ -29,25 +30,38 @@ const {
   getSelectedOptionIcon,
   getSelectedOptionLabel,
   getSelectedOptionStatus,
+  setupClearMissingOptionValue,
 } = useSelectOptions(toRef(props.context, 'options'), contextReactive)
 
 const isSizeSmall = computed(() => props.context.size === 'small')
 
-useSelectAutoselect(sortedOptions, toRef(props, 'context'))
+const select = ref<CommonSelectInstance>()
+
+const openSelectDialog = () => {
+  if (select.value?.isOpen || !props.context.options?.length) return
+  select.value?.openDialog()
+}
+
+useFormBlock(contextReactive, openSelectDialog)
+
+useSelectPreselect(sortedOptions, contextReactive)
+setupClearMissingOptionValue()
 </script>
 
 <template>
   <div
-    :class="{
-      [context.classes.input]: true,
-      'rounded-none bg-transparent': !isSizeSmall,
-      'w-auto rounded-lg bg-gray-600': isSizeSmall,
-    }"
-    class="flex h-auto focus-within:bg-blue-highlight focus-within:pt-0 formkit-populated:pt-0"
+    :class="[
+      {
+        [context.classes.input]: !isSizeSmall,
+        'flex h-auto': !isSizeSmall,
+        'w-auto rounded-lg bg-gray-600': isSizeSmall,
+        'ltr:pr-9 rtl:pl-9': context.clearable && hasValue && !context.disabled,
+      },
+    ]"
     data-test-id="field-select"
   >
     <CommonSelect
-      #default="{ open }"
+      ref="select"
       :model-value="currentValue"
       :options="sortedOptions"
       :multiple="context.multiple"
@@ -59,31 +73,37 @@ useSelectAutoselect(sortedOptions, toRef(props, 'context'))
         :id="context.id"
         :name="context.node.name"
         :class="{
-          'grow pr-3': !isSizeSmall,
+          grow: !isSizeSmall,
           'ltr:pl-2 ltr:pr-1 rtl:pr-2 rtl:pl-1': isSizeSmall,
         }"
         class="flex cursor-pointer items-center focus:outline-none formkit-disabled:pointer-events-none"
         :aria-disabled="context.disabled"
         :aria-label="i18n.t('Select…')"
         :tabindex="context.disabled ? '-1' : '0'"
-        v-bind="context.attrs"
-        role="list"
-        @click="open"
-        @keypress.space="open"
+        v-bind="{
+          ...context.attrs,
+          onBlur: undefined,
+        }"
+        @keypress.space="openSelectDialog()"
         @blur="context.handlers.blur"
       >
         <div
+          v-if="hasValue || isSizeSmall"
           :class="{
             grow: !isSizeSmall,
           }"
           class="flex flex-wrap gap-1"
+          role="list"
         >
           <template v-if="hasValue && hasStatusProperty">
             <CommonTicketStateIndicator
               v-for="selectedValue in valueContainer"
               :key="selectedValue"
               :status="getSelectedOptionStatus(selectedValue)"
-              :label="getSelectedOptionLabel(selectedValue)"
+              :label="
+                getSelectedOptionLabel(selectedValue) ||
+                i18n.t('%s (unknown)', selectedValue)
+              "
               :data-test-status="getSelectedOptionStatus(selectedValue)"
               role="listitem"
               pill
@@ -103,12 +123,15 @@ useSelectAutoselect(sortedOptions, toRef(props, 'context'))
               <CommonIcon
                 v-if="getSelectedOptionIcon(selectedValue)"
                 :name="getSelectedOptionIcon(selectedValue)"
-                :fixed-size="{ width: 12, height: 12 }"
+                size="tiny"
                 class="mr-1"
               />
               <FieldSelectInputSelected
                 :slotted="(context.slots as any)?.output"
-                :label="getSelectedOptionLabel(selectedValue) || selectedValue"
+                :label="
+                  getSelectedOptionLabel(selectedValue) ||
+                  i18n.t('%s (unknown)', selectedValue)
+                "
                 :small="isSizeSmall"
               />
             </div>
@@ -116,6 +139,7 @@ useSelectAutoselect(sortedOptions, toRef(props, 'context'))
           <template v-else-if="isSizeSmall">
             <div
               class="mr-1 overflow-hidden text-ellipsis whitespace-nowrap py-1 text-sm leading-[17px]"
+              role="listitem"
             >
               {{ i18n.t(context.label) }}
             </div>
@@ -124,13 +148,20 @@ useSelectAutoselect(sortedOptions, toRef(props, 'context'))
         <CommonIcon
           v-if="context.clearable && hasValue && !context.disabled"
           :aria-label="i18n.t('Clear Selection')"
-          :fixed-size="{ width: 16, height: 16 }"
-          class="mr-2 shrink-0"
-          name="close-small"
+          class="absolute -mt-5 shrink-0 text-gray ltr:right-2 rtl:left-2"
+          name="mobile-close-small"
+          size="base"
           role="button"
           tabindex="0"
           @click.stop="clearValue"
           @keypress.space.prevent.stop="clearValue"
+        />
+        <CommonIcon
+          v-if="isSizeSmall"
+          class="shrink-0"
+          size="tiny"
+          name="mobile-caret-down"
+          decorative
         />
       </output>
     </CommonSelect>

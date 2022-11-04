@@ -11,11 +11,13 @@ describe('FieldResolverAutocompletionCustomerOrganization', () => {
       dataOption: {
         // TODO ...
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'Organization',
       name: 'organization',
+      required: false,
       props: {},
       type: 'organization',
     })

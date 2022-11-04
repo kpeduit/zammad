@@ -11,7 +11,9 @@ describe('object attribute resolver available', () => {
       dataOption: {
         type: 'text',
         maxlength: 100,
+        null: true,
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
@@ -21,6 +23,7 @@ describe('object attribute resolver available', () => {
         maxlength: 100,
       },
       type: 'text',
+      required: false,
     })
   })
 })

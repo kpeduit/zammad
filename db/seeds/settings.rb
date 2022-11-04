@@ -2090,7 +2090,7 @@ Setting.create_if_not_exists(
   description: __("The format of the subject.
 * **Right** means **Some Subject [Ticket#12345]**
 * **Left** means **[Ticket#12345] Some Subject**
-* **None** means **Some Subject** (without ticket number). In the last case you should enable *postmaster_follow_up_search_in* to recognize follow-ups based on email headers and/or body."),
+* **None** means **Some Subject** (without ticket number), in which case it recognizes follow-ups based on email headers."),
   options:     {
     form: [
       {
@@ -5005,5 +5005,33 @@ Setting.create_if_not_exists(
     permission:       ['admin.security'],
   },
   state:       false,
+  frontend:    true
+)
+
+Setting.create_if_not_exists(
+  title:       __('Show calendar weeks in the picker of date/datetime fields'),
+  name:        'datepicker_show_calendar_weeks',
+  area:        'System::UI',
+  description: __('Defines if calendar weeks are shown in the picker of date/datetime fields to easily select the correct date.'),
+  options:     {
+    form: [
+      {
+        display: '',
+        null:    true,
+        name:    'datepicker_show_calendar_weeks',
+        tag:     'boolean',
+        options: {
+          true  => 'yes',
+          false => 'no',
+        },
+      },
+    ],
+  },
+  state:       false,
+  preferences: {
+    render:     true,
+    prio:       4,
+    permission: ['admin.system'],
+  },
   frontend:    true
 )

@@ -2,12 +2,12 @@
 
 import createInput from '@shared/form/core/createInput'
 import addLink from '@shared/form/features/addLink'
+import formUpdaterTrigger from '@shared/form/features/formUpdaterTrigger'
 import FieldTreeSelectInput from './FieldTreeSelectInput.vue'
 
 const fieldDefinition = createInput(
   FieldTreeSelectInput,
   [
-    'autoselect',
     'clearable',
     'noFiltering',
     'multiple',
@@ -15,7 +15,7 @@ const fieldDefinition = createInput(
     'options',
     'sorting',
   ],
-  { features: [addLink] },
+  { features: [addLink, formUpdaterTrigger()] },
   { addArrow: true },
 )
 

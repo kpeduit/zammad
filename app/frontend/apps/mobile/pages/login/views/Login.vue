@@ -11,8 +11,17 @@ import CommonLogo from '@shared/components/CommonLogo/CommonLogo.vue'
 import Form from '@shared/components/Form/Form.vue'
 import { type FormData, useForm } from '@shared/components/Form'
 import UserError from '@shared/errors/UserError'
-import { defineFormSchema } from '@mobile/form/composable'
+import { defineFormSchema } from '@mobile/form/defineFormSchema'
 import { useApplicationStore } from '@shared/stores/application'
+import { usePublicLinksQuery } from '@shared/entities/public-links/graphql/queries/links.api'
+import type {
+  PublicLinkUpdatesSubscription,
+  PublicLinkUpdatesSubscriptionVariables,
+} from '@shared/graphql/types'
+import { EnumPublicLinksScreen } from '@shared/graphql/types'
+import { computed } from 'vue'
+import { QueryHandler } from '@shared/server/apollo/handler'
+import { PublicLinkUpdatesDocument } from '@shared/entities/public-links/graphql/subscriptions/currentLinks.api'
 
 const route = useRoute()
 
@@ -35,22 +44,30 @@ const application = useApplicationStore()
 
 const loginSchema = defineFormSchema([
   {
-    name: 'login',
-    type: 'text',
-    label: __('Username / Email'),
-    placeholder: __('Username / Email'),
-    required: true,
-    outerClass: 'mb-2',
-    wrapperClass: 'rounded-xl bg-gray-500',
+    isLayout: true,
+    component: 'FormGroup',
+    children: [
+      {
+        name: 'login',
+        type: 'text',
+        label: __('Username / Email'),
+        placeholder: __('Username / Email'),
+        required: true,
+      },
+    ],
   },
   {
-    name: 'password',
-    label: __('Password'),
-    placeholder: __('Password'),
-    type: 'password',
-    required: true,
-    outerClass: 'mb-2',
-    wrapperClass: 'rounded-xl bg-gray-500',
+    isLayout: true,
+    component: 'FormGroup',
+    children: [
+      {
+        name: 'password',
+        label: __('Password'),
+        placeholder: __('Password'),
+        type: 'password',
+        required: true,
+      },
+    ],
   },
   {
     isLayout: true,
@@ -89,6 +106,42 @@ interface LoginFormData {
   rememberMe: boolean
 }
 
+const publicLinksQuery = new QueryHandler(
+  usePublicLinksQuery({
+    screen: EnumPublicLinksScreen.Login,
+  }),
+)
+
+publicLinksQuery.subscribeToMore<
+  PublicLinkUpdatesSubscriptionVariables,
+  PublicLinkUpdatesSubscription
+>({
+  document: PublicLinkUpdatesDocument,
+  variables: {
+    screen: EnumPublicLinksScreen.Login,
+  },
+  updateQuery(existing, { subscriptionData }) {
+    const publicLinks = subscriptionData.data.publicLinkUpdates?.publicLinks
+    return {
+      publicLinks: publicLinks || existing.publicLinks || [],
+    }
+  },
+})
+
+const links = computed(() => {
+  const publicLinks = publicLinksQuery.result()
+
+  return [
+    {
+      id: '-1',
+      link: '/#login',
+      title: __('Continue to desktop app'),
+      newTab: false,
+    },
+    ...(publicLinks.value?.publicLinks || []),
+  ]
+})
+
 // TODO: workaround for disabled button state, will be changed in formkit.
 const { form, isDisabled } = useForm()
 
@@ -121,17 +174,16 @@ const login = (formData: FormData<LoginFormData>) => {
 </script>
 
 <template>
-  <!-- TODO: Only a "second" dummy implementation for the login... -->
   <div class="flex h-full min-h-screen flex-col items-center px-6 pt-6 pb-4">
-    <div class="m-auto w-full max-w-md">
+    <main class="m-auto w-full max-w-md">
       <div class="flex grow flex-col justify-center">
         <div class="my-5 grow">
           <div class="flex justify-center p-2">
             <CommonLogo />
           </div>
-          <div class="mb-6 flex justify-center p-2 text-2xl font-extrabold">
+          <h1 class="mb-6 flex justify-center p-2 text-2xl font-extrabold">
             {{ $c.product_name }}
-          </div>
+          </h1>
           <template v-if="$c.maintenance_mode">
             <div
               class="my-1 flex items-center rounded-xl bg-red py-2 px-4 text-white"
@@ -182,20 +234,32 @@ const login = (formData: FormData<LoginFormData>) => {
           </Form>
         </div>
       </div>
-    </div>
-    <div class="mb-6 flex items-center justify-center">
-      <CommonLink link="/#login" class="!text-gray underline">
-        {{ $t('Continue to desktop app') }}
-      </CommonLink>
-    </div>
-    <div class="flex items-center justify-center align-middle text-gray-200">
+    </main>
+    <nav class="mb-6 flex flex-wrap items-center justify-center gap-1">
+      <template v-for="(link, idx) of links" :key="link.id">
+        <CommonLink
+          :link="link.link"
+          :title="link.description"
+          :open-in-new-tab="link.newTab"
+          class="!text-gray underline"
+        >
+          {{ $t(link.title) }}
+        </CommonLink>
+        <span v-if="idx !== links.length - 1" aria-hidden="true">|</span>
+      </template>
+    </nav>
+    <footer class="flex items-center justify-center align-middle text-gray-200">
       <CommonLink
         link="https://zammad.org"
         external
         open-in-new-tab
         class="ltr:mr-1 rtl:ml-1"
       >
-        <CommonIcon name="logo" :fixed-size="{ width: 24, height: 24 }" />
+        <img
+          :src="'/assets/images/icons/logo.svg'"
+          :alt="$t('Logo')"
+          class="h-6 w-6"
+        />
       </CommonLink>
       <span class="ltr:mr-1 rtl:ml-1">{{ $t('Powered by') }}</span>
       <CommonLink
@@ -206,6 +270,6 @@ const login = (formData: FormData<LoginFormData>) => {
       >
         Zammad
       </CommonLink>
-    </div>
+    </footer>
   </div>
 </template>

@@ -1,13 +1,13 @@
 # Copyright (C) 2012-2022 Zammad Foundation, https://zammad-foundation.org/
 
 RSpec.shared_examples 'text modules' do |path:|
-  let!(:agent_fixed_name)           { create :agent, firstname: 'FFFF1', lastname: 'GGGG1', groups: [Group.find_by(name: 'Users')] }
-  let!(:group1)                     { create :group }
-  let!(:group2)                     { create :group }
-  let!(:text_module_without_group1) { create :text_module, name: 'aaa', keywords: "test dummy #{Faker::Superhero.prefix}" }
-  let!(:text_module_without_group2) { create :text_module, name: 'bbb', keywords: "test dummy #{Faker::Superhero.prefix}" }
-  let!(:text_module_group1)         { create :text_module, name: 'ccc', keywords: "test dummy #{Faker::Superhero.prefix}", groups: [group1] }
-  let!(:text_module_group2)         { create :text_module, name: 'ddd', keywords: "test dummy #{Faker::Superhero.prefix}", groups: [group2] }
+  let!(:agent_fixed_name)           { create(:agent, firstname: 'FFFF1', lastname: 'GGGG1', groups: [Group.find_by(name: 'Users')]) }
+  let!(:group1)                     { create(:group) }
+  let!(:group2)                     { create(:group) }
+  let!(:text_module_without_group1) { create(:text_module, name: 'aaa', keywords: "test dummy #{Faker::Superhero.prefix}") }
+  let!(:text_module_without_group2) { create(:text_module, name: 'bbb', keywords: "test dummy #{Faker::Superhero.prefix}") }
+  let!(:text_module_group1)         { create(:text_module, name: 'ccc', keywords: "test dummy #{Faker::Superhero.prefix}", groups: [group1]) }
+  let!(:text_module_group2)         { create(:text_module, name: 'ddd', keywords: "test dummy #{Faker::Superhero.prefix}", groups: [group2]) }
 
   it 'shows when send ::' do
     refresh # workaround to get new created objects from db
@@ -121,6 +121,7 @@ RSpec.shared_examples 'text modules' do |path:|
   end
 
   it 'supports group-dependent text modules' do
+    visit '/'
 
     # give user access to all groups including those created
     # by using FactoryBot outside of the example
@@ -165,15 +166,15 @@ RSpec.shared_examples 'text modules' do |path:|
       wait.until_exists { find('.text-modules-box') }
 
       expected_order = [
-        text_module_without_group2.name + text_module_without_group2.keywords,
-        text_module_without_group1.name + text_module_without_group1.keywords,
+        "#{text_module_without_group2.name}\n#{text_module_without_group2.keywords}",
+        "#{text_module_without_group1.name}\n#{text_module_without_group1.keywords}",
       ]
       if path == 'ticket/create'
         expected_order = [
-          text_module_group2.name + text_module_group2.keywords,
-          text_module_group1.name + text_module_group1.keywords,
-          text_module_without_group2.name + text_module_without_group2.keywords,
-          text_module_without_group1.name + text_module_without_group1.keywords,
+          "#{text_module_group2.name}\n#{text_module_group2.keywords}",
+          "#{text_module_group1.name}\n#{text_module_group1.keywords}",
+          "#{text_module_without_group2.name}\n#{text_module_without_group2.keywords}",
+          "#{text_module_without_group1.name}\n#{text_module_without_group1.keywords}",
         ]
       end
 

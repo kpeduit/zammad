@@ -7,6 +7,7 @@ import { useLocaleStore } from '@shared/stores/locale'
 
 export interface Props {
   label?: string
+  labelPlaceholder?: string[]
   link?: string
   icon?: string | (IconProps & HTMLAttributes)
   iconBg?: string
@@ -49,9 +50,9 @@ const iconProps = computed<IconProps | null>(() => {
             [`rounded-lg ${iconBg}`]: iconBg,
           }"
         >
-          <CommonIcon v-bind="iconProps" />
+          <CommonIcon v-bind="iconProps" decorative />
         </div>
-        <slot>{{ i18n.t(label) }}</slot>
+        <slot>{{ i18n.t(label, ...(labelPlaceholder || [])) }}</slot>
       </div>
 
       <div
@@ -60,9 +61,12 @@ const iconProps = computed<IconProps | null>(() => {
       >
         <slot name="right">{{ information && i18n.t(`${information}`) }}</slot>
         <CommonIcon
-          class="text-gray-300 ltr:ml-2 rtl:mr-2"
-          :name="`arrow-${locale.localeData?.dir === 'rtl' ? 'left' : 'right'}`"
-          :fixed-size="{ width: 12, height: 12 }"
+          class="text-gray ltr:ml-2 rtl:mr-2"
+          :name="`mobile-chevron-${
+            locale.localeData?.dir === 'rtl' ? 'left' : 'right'
+          }`"
+          size="base"
+          decorative
         />
       </div>
     </div>

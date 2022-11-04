@@ -2,13 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'HasSearchIndexBackend', type: :model, searchindex: true, performs_jobs: true do
-  before do
-    article && organization
-
-    searchindex_model_reload([::Ticket, ::Organization])
-  end
-
+RSpec.describe 'HasSearchIndexBackend', performs_jobs: true, searchindex: true, type: :model do
   describe 'Updating referenced data between ticket and organizations' do
     let(:organization) { create(:organization, name: 'Tomato42') }
     let(:user)         { create(:customer, organization: organization) }
@@ -23,6 +17,12 @@ RSpec.describe 'HasSearchIndexBackend', type: :model, searchindex: true, perform
              filename: 'es-normal.txt')
 
       article
+    end
+
+    before do
+      article && organization
+
+      searchindex_model_reload([::Ticket, ::Organization])
     end
 
     it 'finds added tickets' do
@@ -79,6 +79,29 @@ RSpec.describe 'HasSearchIndexBackend', type: :model, searchindex: true, perform
 
     it 'does exclude updated_by as relevant search index attribute' do
       expect(Ticket).not_to be_search_index_attribute_relevant('updated_by_id')
+    end
+  end
+
+  describe 'Updating group settings causes huge numbers of delayed jobs #4306', performs_jobs: false do
+    let(:ticket) { create(:ticket, customer: create(:customer, :with_org)) }
+
+    before do
+      ticket
+      Delayed::Job.destroy_all
+    end
+
+    it 'does not create any jobs if nothing has changed' do
+      expect { ticket.update(title: ticket.title) }.not_to change(Delayed::Job, :count)
+    end
+
+    it 'does not create any jobs for the organization if the organization has not changed at the ticket' do
+      ticket.update(title: SecureRandom.uuid)
+      expect(Delayed::Job.where("handler LIKE '%SearchIndexJob%' AND handler LIKE '%Organization%'").count).to eq(0)
+    end
+
+    it 'does create jobs for the organization if the organization has changed at the ticket' do
+      ticket.update(customer: create(:customer, :with_org))
+      expect(Delayed::Job.where("handler LIKE '%SearchIndexJob%' AND handler LIKE '%Organization%'").count).to be > 0
     end
   end
 end

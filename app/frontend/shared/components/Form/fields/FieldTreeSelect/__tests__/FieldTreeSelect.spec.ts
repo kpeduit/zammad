@@ -5,6 +5,7 @@ import { getByText, waitFor } from '@testing-library/vue'
 import { FormKit } from '@formkit/vue'
 import { renderComponent } from '@tests/support/components'
 import { i18n } from '@shared/i18n'
+import { getNode } from '@formkit/core'
 
 // Mock IntersectionObserver feature by injecting it into the global namespace.
 //   More info here: https://vitest.dev/guide/mocking.html#globals
@@ -15,14 +16,6 @@ const IntersectionObserverMock = vi.fn(() => ({
   unobserve: vi.fn(),
 }))
 vi.stubGlobal('IntersectionObserver', IntersectionObserverMock)
-
-// FIXME: Vue Test Utils' teleport stub and HeadlessUI's Dialog don't work well together.
-//   Temporarily disable `console.warn` method due to log being flooded with warnings such as:
-//   [Vue warn]: Maximum recursive updates exceeded in component <Portal>. This means you have a reactive effect that is
-//   mutating its own dependencies and thus recursively triggering itself. Possible sources include component template,
-//   render function, updated hook or watcher source function.
-//   More info here: https://github.com/tailwindlabs/headlessui/issues/1025
-globalThis.console.warn = vi.fn() as never
 
 const testOptions = [
   {
@@ -95,7 +88,7 @@ describe('Form - Field - TreeSelect - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -116,10 +109,11 @@ describe('Form - Field - TreeSelect - Dialog', () => {
       props: {
         type: 'treeselect',
         options: testOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[0])
 
@@ -144,13 +138,13 @@ describe('Form - Field - TreeSelect - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(
       getByText(wrapper.getByRole('listbox'), testOptions[1].label),
     ).toHaveClass('font-semibold')
 
-    expect(wrapper.getByIconName('check')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-check')).toBeInTheDocument()
 
     await wrapper.events.click(wrapper.getByRole('button', { name: /Done/ }))
 
@@ -186,7 +180,7 @@ describe('Form - Field - TreeSelect - Dialog', () => {
     })
 
     // Level 0
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     // only "Done"
     expect(wrapper.getAllByRole('button')).toHaveLength(1)
@@ -276,7 +270,7 @@ describe('Form - Field - TreeSelect - Dialog', () => {
     await wrapper.events.click(wrapper.getAllByRole('button')[0])
 
     // Level 0
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.getAllByRole('button')).toHaveLength(1)
 
@@ -291,7 +285,7 @@ describe('Form - Field - TreeSelect - Dialog', () => {
 })
 
 describe('Form - Field - TreeSelect - Options', () => {
-  it('supports options mutation', async () => {
+  it('supports unknown options', async () => {
     const optionsProp = cloneDeep(testOptions)
 
     const wrapper = renderComponent(FormKit, {
@@ -303,9 +297,9 @@ describe('Form - Field - TreeSelect - Options', () => {
       },
     })
 
-    expect(wrapper.getByRole('listitem')).toHaveTextContent('10')
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('10 (unknown)')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -331,6 +325,42 @@ describe('Form - Field - TreeSelect - Options', () => {
     await wrapper.events.click(wrapper.getByRole('button'))
 
     expect(wrapper.getByRole('listitem')).toHaveTextContent('Item D')
+  })
+
+  it('supports clearing of the existing value when option goes away', async () => {
+    const optionsProp = cloneDeep(testOptions)
+
+    optionsProp.push({
+      value: 10,
+      label: 'Item D',
+    })
+
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        clearable: true, // otherwise it defaults to the first option
+        type: 'treeselect',
+        value: 10,
+        options: optionsProp,
+      },
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item D')
+
+    optionsProp.pop()
+
+    await wrapper.rerender({
+      options: optionsProp,
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
+
+    expect(emittedInput[0][0]).toBe(undefined)
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
   })
 
   it('supports disabled property', async () => {
@@ -368,7 +398,7 @@ describe('Form - Field - TreeSelect - Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.getAllByRole('option')[1]).toHaveClass('pointer-events-none')
 
@@ -426,7 +456,7 @@ describe('Form - Field - TreeSelect - Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
     const selectedOptionStatuses = wrapper.getAllByRole('group')
@@ -446,12 +476,12 @@ describe('Form - Field - TreeSelect - Options', () => {
       {
         value: 1,
         label: 'GitLab',
-        icon: 'gitlab-logo',
+        icon: 'mobile-gitlab',
       },
       {
         value: 2,
         label: 'GitHub',
-        icon: 'github-logo',
+        icon: 'mobile-github',
       },
     ]
 
@@ -460,10 +490,11 @@ describe('Form - Field - TreeSelect - Options', () => {
       props: {
         type: 'treeselect',
         options: iconOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.queryByIconName(iconOptions[0].icon)).toBeInTheDocument()
     expect(wrapper.queryByIconName(iconOptions[1].icon)).toBeInTheDocument()
@@ -535,12 +566,12 @@ describe('Form - Field - TreeSelect - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
     expect(selectOptions).toHaveLength(
-      wrapper.queryAllByIconName('checked-no').length,
+      wrapper.queryAllByIconName('mobile-check-box-no').length,
     )
 
     wrapper.events.click(selectOptions[0])
@@ -552,8 +583,8 @@ describe('Form - Field - TreeSelect - Features', () => {
     const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
 
     expect(emittedInput[0][0]).toStrictEqual([testOptions[0].value])
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(2)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(1)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(1)
 
@@ -564,14 +595,14 @@ describe('Form - Field - TreeSelect - Features', () => {
     wrapper.events.click(selectOptions[1])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[1][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -582,15 +613,15 @@ describe('Form - Field - TreeSelect - Features', () => {
     wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[2][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
         testOptions[2].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(0)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(3)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(0)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(3)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(3)
 
@@ -601,14 +632,14 @@ describe('Form - Field - TreeSelect - Features', () => {
     wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[3][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -633,7 +664,7 @@ describe('Form - Field - TreeSelect - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -697,7 +728,7 @@ describe('Form - Field - TreeSelect - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = await wrapper.findAllByRole('option')
 
@@ -715,7 +746,7 @@ describe('Form - Field - TreeSelect - Features', () => {
       noOptionsLabelTranslation: true,
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     selectOptions = await wrapper.findAllByRole('option')
 
@@ -730,18 +761,14 @@ describe('Form - Field - TreeSelect - Features', () => {
     )
   })
 
-  it('supports option autoselect', async () => {
+  it('supports option preselect', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
+        name: 'treeselect',
+        id: 'treeselect',
         type: 'treeselect',
-        options: [
-          {
-            value: 1,
-            label: 'The One',
-          },
-        ],
-        autoselect: true,
+        options: testOptions,
       },
     })
 
@@ -749,11 +776,82 @@ describe('Form - Field - TreeSelect - Features', () => {
       expect(wrapper.emitted().inputRaw).toBeTruthy()
     })
 
-    const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item A')
 
-    expect(emittedInput[0][0]).toBe(1)
+    await wrapper.rerender({
+      clearable: true,
+    })
 
-    expect(wrapper.getByRole('listitem')).toHaveTextContent('The One')
+    await wrapper.events.click(wrapper.getByRole('button'))
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item A')
+
+    // Reset the value before the next test case
+    const node = getNode('treeselect')
+    node?.input(null)
+
+    await wrapper.rerender({
+      clearable: false,
+      options: [
+        {
+          value: 9,
+          label: 'Ítem C',
+        },
+      ],
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Ítem C')
+
+    await wrapper.rerender({
+      clearable: true,
+      multiple: true,
+    })
+
+    await wrapper.events.click(wrapper.getByRole('button'))
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: true,
+      multiple: false,
+      disabled: true,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
   })
 
   it('supports option filtering', async () => {
@@ -765,7 +863,7 @@ describe('Form - Field - TreeSelect - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -882,11 +980,11 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '0')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '0')
 
     expect(wrapper.getByRole('button')).toHaveAttribute('tabindex', '0')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -907,7 +1005,36 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '-1')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '-1')
+  })
+
+  it("clicking disabled field doesn't select dialog", async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        type: 'treeselect',
+        options: testOptions,
+        disabled: true,
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it("clicking select without options doesn't open select dialog", async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        type: 'treeselect',
+        options: [],
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('provides labels for screen readers', async () => {
@@ -921,7 +1048,10 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('aria-label', 'Select…')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'aria-label',
+      'Select…',
+    )
 
     expect(wrapper.getByRole('button')).toHaveAttribute(
       'aria-label',
@@ -940,7 +1070,7 @@ describe('Form - Field - TreeSelect - Accessibility', () => {
       },
     })
 
-    await wrapper.events.type(wrapper.getByRole('list'), '{Space}')
+    await wrapper.events.type(wrapper.getByLabelText('Select…'), '{Space}')
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -976,7 +1106,7 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('id', 'test_id')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('id', 'test_id')
 
     expect(wrapper.getByLabelText('Test label')).toHaveAttribute(
       'id',
@@ -994,7 +1124,10 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('name', 'test_name')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'name',
+      'test_name',
+    )
   })
 
   it('implements blur handler', async () => {
@@ -1009,10 +1142,10 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       },
     })
 
-    wrapper.getByRole('list').focus()
+    wrapper.getByLabelText('Select…').focus()
     await wrapper.events.tab()
 
-    expect(blurHandler).toHaveBeenCalled()
+    expect(blurHandler).toHaveBeenCalledOnce()
   })
 
   it('implements input handler', async () => {
@@ -1021,10 +1154,11 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       props: {
         type: 'treeselect',
         options: testOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[1])
 
@@ -1065,7 +1199,7 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveClass(
+    expect(wrapper.getByLabelText('Select…')).toHaveClass(
       'formkit-disabled:pointer-events-none',
     )
   })
@@ -1080,7 +1214,7 @@ describe('Form - Field - TreeSelect - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute(
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
       'test-attribute',
       'test_value',
     )

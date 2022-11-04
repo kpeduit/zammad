@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe 'Ticket history', type: :system, time_zone: 'Europe/London' do
+RSpec.describe 'Ticket history', time_zone: 'Europe/London', type: :system do
   let(:group)         { Group.find_by(name: 'Users') }
   let(:customer)      { create(:customer, organization: organization) }
   let!(:session_user) { User.find_by(login: 'admin@example.com') }
@@ -37,6 +37,8 @@ RSpec.describe 'Ticket history', type: :system, time_zone: 'Europe/London' do
 
     session_user.preferences[:locale] = locale
     session_user.save!
+
+    visit '/'
 
     # Suppress the modal dialog that invites to contributions for translations that are < 90% as this breaks the tests for de-de.
     page.evaluate_script "App.LocalStorage.set('translation_support_no', true, App.Session.get('id'))"

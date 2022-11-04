@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { i18n } from '@shared/i18n'
+import { useApplicationStore } from '@shared/stores/application'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/themes/dark.css'
 import {
@@ -31,6 +32,8 @@ export interface Props {
 const props = defineProps<Props>()
 
 const { currentValue } = useValue(toRef(props, 'context'))
+
+const application = useApplicationStore()
 
 const locale: flatpickr.CustomLocale = {
   // calendar on desktop always starts at 1
@@ -86,6 +89,7 @@ const locale: flatpickr.CustomLocale = {
     ],
   },
   rangeSeparator: i18n.t(' to '),
+  weekAbbreviation: i18n.t('CW'),
 }
 
 const pickerNode = shallowRef<HTMLElement>()
@@ -172,7 +176,7 @@ const createFlatpickr = () => {
     disableMobile: true,
     inline: true,
     time_24hr: i18n.timeFormat() === '24hour',
-    enableTime: time.value === true,
+    enableTime: time.value,
     allowInput: true,
     // append calendar to parent, so we can add our own elements after input
     // otherwise everything after input will actually appear after calendar
@@ -181,6 +185,11 @@ const createFlatpickr = () => {
     defaultDate: currentValue.value,
     maxDate: props.context.maxDate,
     minDate: getMinDate(),
+    weekNumbers: application.config.datepicker_show_calendar_weeks === true,
+    prevArrow:
+      '<svg xmlns="http://www.w3.org/2000/svg" class="icon fill-current" width="24" height="24"><use href="#icon-mobile-chevron-left" /></svg>',
+    nextArrow:
+      '<svg xmlns="http://www.w3.org/2000/svg" class="icon fill-current" width="24" height="24"><use href="#icon-mobile-chevron-right" /></svg>',
     formatDate(date) {
       const isoDate = date.toISOString()
       if (time.value) return i18n.dateTime(isoDate)
@@ -225,6 +234,11 @@ watch(
 watch(currentValue, (date: string) => {
   datepicker.value?.setDate(date, false)
 })
+
+watch(
+  () => application.config.datepicker_show_calendar_weeks,
+  rerenderFlatpickr,
+)
 
 // toggle calendar visibility when showPicker changes
 const showPicker = ref(false)
@@ -315,9 +329,15 @@ span.flatpickr-weekday {
   @apply border-blue bg-blue;
 }
 
+.flatpickr-months .flatpickr-prev-month.flatpickr-prev-month:hover,
 .flatpickr-months .flatpickr-prev-month.flatpickr-prev-month {
-  right: 34px;
   left: unset;
+  @apply right-8 w-auto p-2;
+}
+
+.flatpickr-months .flatpickr-next-month.flatpickr-next-month:hover,
+.flatpickr-months .flatpickr-next-month.flatpickr-next-month {
+  @apply w-auto p-2;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover,
@@ -328,12 +348,13 @@ span.flatpickr-weekday {
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
-.flatpickr-months .flatpickr-next-month:hover svg,
-.flatpickr-months .flatpickr-next-month svg path,
-.flatpickr-months .flatpickr-prev-month svg path {
-  fill: currentColor;
-  stroke: currentColor;
-  stroke-width: 2px;
+.flatpickr-months .flatpickr-next-month:hover svg {
+  @apply fill-current;
+}
+
+.flatpickr-months .flatpickr-prev-month svg,
+.flatpickr-months .flatpickr-next-month svg {
+  @apply h-5 w-5;
 }
 
 .flatpickr-months .flatpickr-current-month {

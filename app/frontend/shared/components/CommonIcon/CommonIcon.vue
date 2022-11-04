@@ -8,6 +8,7 @@ export interface Props {
   size?: Sizes
   fixedSize?: { width: number; height: number }
   name: string
+  label?: string
   decorative?: boolean
   animation?: Animations
 }
@@ -20,12 +21,13 @@ const animationClassMap: Record<Animations, string> = {
 }
 
 const sizeMap: Record<Sizes, number> = {
-  xs: 10,
-  tiny: 15,
+  xs: 12,
+  tiny: 16,
   small: 20,
-  base: 25,
-  medium: 30,
-  large: 40,
+  base: 24,
+  medium: 32,
+  large: 48,
+  xl: 96,
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -66,7 +68,7 @@ const finalSize = computed(() => {
     :class="iconClass"
     :width="finalSize.width"
     :height="finalSize.height"
-    :aria-labelledby="name"
+    :aria-label="decorative ? undefined : $t(label || name)"
     :aria-hidden="decorative"
     @click="onClick"
   >

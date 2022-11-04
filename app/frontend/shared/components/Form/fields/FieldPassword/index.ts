@@ -5,6 +5,7 @@ import type { FormKitNode } from '@formkit/core'
 import { password as passwordDefinition } from '@formkit/inputs'
 import initializeFieldDefinition from '@shared/form/core/initializeFieldDefinition'
 import extendSchemaDefinition from '@shared/form/utils/extendSchemaDefinition'
+import formUpdaterTrigger from '@shared/form/features/formUpdaterTrigger'
 
 const localPasswordDefinition = cloneDeep(passwordDefinition)
 
@@ -12,7 +13,7 @@ const switchPasswordVisibility = (node: FormKitNode) => {
   const { props } = node
 
   node.addProps(['passwordVisibilityIcon'])
-  props.passwordVisibilityIcon = 'eye'
+  props.passwordVisibilityIcon = 'mobile-show'
 
   extendSchemaDefinition(node, 'suffix', {
     $el: 'span',
@@ -34,12 +35,13 @@ const switchPasswordVisibility = (node: FormKitNode) => {
 
   node.on('prop:type', ({ payload, origin }) => {
     const { props } = origin
-    props.passwordVisibilityIcon = payload === 'password' ? 'eye' : 'eye-off'
+    props.passwordVisibilityIcon =
+      payload === 'password' ? 'mobile-show' : 'mobile-hide'
   })
 }
 
 initializeFieldDefinition(localPasswordDefinition, {
-  features: [switchPasswordVisibility],
+  features: [switchPasswordVisibility, formUpdaterTrigger('blur')],
 })
 
 export default {

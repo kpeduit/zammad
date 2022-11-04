@@ -206,20 +206,18 @@ onMounted(() => {
       @keypress.space="goToPreviousPage()"
       @keydown="advanceDialogFocus"
     >
-      <CommonIcon
-        :fixed-size="{ width: 24, height: 24 }"
-        class="mr-3"
-        name="chevron-left"
-      />
+      <CommonIcon size="base" class="mr-3" name="mobile-chevron-left" />
       <span class="grow font-semibold text-white/80">
         {{ currentParent.label || currentParent.value }}
       </span>
     </div>
     <div
+      v-if="filter ? filteredOptions.length : currentOptions.length"
       ref="dialog"
       :class="{
         'border-t border-white/30': currentPath.length,
       }"
+      :aria-label="$t('Select…')"
       class="flex grow flex-col items-start self-stretch overflow-y-auto"
       role="listbox"
     >
@@ -256,8 +254,12 @@ onMounted(() => {
             '!text-white': isCurrentValue(option.value),
             'opacity-30': option.disabled,
           }"
-          :fixed-size="{ width: 24, height: 24 }"
-          :name="isCurrentValue(option.value) ? 'checked-yes' : 'checked-no'"
+          :name="
+            isCurrentValue(option.value)
+              ? 'mobile-check-box-yes'
+              : 'mobile-check-box-no'
+          "
+          size="base"
           class="mr-3 text-white/50"
         />
         <CommonTicketStateIndicator
@@ -272,11 +274,11 @@ onMounted(() => {
         <CommonIcon
           v-else-if="option.icon"
           :name="option.icon"
-          :fixed-size="{ width: 16, height: 16 }"
           :class="{
             '!text-white': isCurrentValue(option.value),
             'opacity-30': option.disabled,
           }"
+          size="small"
           class="mr-[11px] text-white/80"
         />
         <span
@@ -294,7 +296,10 @@ onMounted(() => {
               class="opacity-50"
             >
               —
-              {{ getSelectedOptionLabel(parentValue) || parentValue }}
+              {{
+                getSelectedOptionLabel(parentValue) ||
+                i18n.t('%s (unknown)', parentValue.toString())
+              }}
             </span>
           </template>
         </span>
@@ -303,26 +308,26 @@ onMounted(() => {
           :class="{
             'opacity-30': option.disabled,
             'mr-3': (option as FlatSelectOption).hasChildren,
-        }"
-          :fixed-size="{ width: 16, height: 16 }"
-          name="check"
+          }"
+          size="tiny"
+          name="mobile-check"
         />
         <CommonIcon
           v-if="(option as FlatSelectOption).hasChildren && !filter"
           class="pointer-events-auto"
-          :fixed-size="{ width: 24, height: 24 }"
-          name="chevron-right"
+          size="base"
+          name="mobile-chevron-right"
           role="link"
           @click.stop="goToNextPage(option as FlatSelectOption)"
         />
       </div>
-      <div
-        v-if="filter && !filteredOptions.length"
-        class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
-        role="alert"
-      >
-        {{ $t('No results found') }}
-      </div>
+    </div>
+    <div
+      v-if="filter && !filteredOptions.length"
+      class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
+      role="alert"
+    >
+      {{ $t('No results found') }}
     </div>
   </CommonDialog>
 </template>

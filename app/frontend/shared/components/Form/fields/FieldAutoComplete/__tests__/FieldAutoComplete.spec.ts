@@ -2,13 +2,18 @@
 
 import { cloneDeep, escapeRegExp } from 'lodash-es'
 import { getByText, waitFor } from '@testing-library/vue'
+import { getNode } from '@formkit/core'
 import { FormKit } from '@formkit/vue'
+import { provideApolloClient } from '@vue/apollo-composable'
+import { createMockClient } from 'mock-apollo-client'
 import { renderComponent } from '@tests/support/components'
 import { i18n } from '@shared/i18n'
-import { createMockClient } from 'mock-apollo-client'
-import { provideApolloClient } from '@vue/apollo-composable'
 import { AutocompleteSearchUserDocument } from '@shared/graphql/queries/autocompleteSearch/user.api'
+import { waitForNextTick } from '@tests/support/utils'
+import type { ObjectLike } from '@shared/types/utils'
 import type { AutocompleteSearchUserQuery } from '@shared/graphql/types'
+import type { FormFieldContext } from '@shared/components/Form/types/field'
+import type { SelectValue } from '../../FieldSelect'
 
 const testOptions = [
   {
@@ -65,6 +70,7 @@ const mockQueryResult = (
   }
 }
 
+// TODO: can maybe be replaced with existing helper function?
 const mockClient = () => {
   const mockApolloClient = createMockClient()
 
@@ -120,7 +126,7 @@ describe('Form - Field - AutoComplete - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -145,7 +151,7 @@ describe('Form - Field - AutoComplete - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[0])
 
@@ -170,9 +176,9 @@ describe('Form - Field - AutoComplete - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    expect(wrapper.getByIconName('check')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-check')).toBeInTheDocument()
 
     await wrapper.events.click(wrapper.getByRole('button', { name: /Done/ }))
 
@@ -192,14 +198,13 @@ describe('Form - Field - AutoComplete - Query', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
     expect(filterElement).toBeInTheDocument()
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search is always case-insensitive.
     await wrapper.events.type(filterElement, 'a')
@@ -220,7 +225,6 @@ describe('Form - Field - AutoComplete - Query', () => {
     expect(filterElement).toHaveValue('')
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for non-accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'item c')
@@ -237,7 +241,6 @@ describe('Form - Field - AutoComplete - Query', () => {
     await wrapper.events.clear(filterElement)
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'ítem c')
@@ -261,7 +264,7 @@ describe('Form - Field - AutoComplete - Query', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -283,9 +286,9 @@ describe('Form - Field - AutoComplete - Query', () => {
       testOptions[0].label,
     )
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    expect(wrapper.getByIconName('check')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-check')).toBeInTheDocument()
   })
 })
 
@@ -315,7 +318,7 @@ describe('Form - Field - AutoComplete - Initial Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.getAllByRole('option')[1]).toHaveClass('pointer-events-none')
 
@@ -329,12 +332,12 @@ describe('Form - Field - AutoComplete - Initial Options', () => {
       {
         value: 1,
         label: 'GitLab',
-        icon: 'gitlab-logo',
+        icon: 'mobile-gitlab',
       },
       {
         value: 2,
         label: 'GitHub',
-        icon: 'github-logo',
+        icon: 'mobile-github',
       },
     ]
 
@@ -346,7 +349,7 @@ describe('Form - Field - AutoComplete - Initial Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.queryByIconName(iconOptions[0].icon)).toBeInTheDocument()
     expect(wrapper.queryByIconName(iconOptions[1].icon)).toBeInTheDocument()
@@ -354,13 +357,12 @@ describe('Form - Field - AutoComplete - Initial Options', () => {
 })
 
 describe('Form - Field - AutoComplete - Features', () => {
-  // FIXME: Updating value prop does not seem to mutate it.
-  //   It could be a bug in FormKit, though. Retry with next release.
-  it.todo('supports value mutation', async () => {
+  it('supports value mutation', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
         ...testProps,
+        id: 'autocomplete',
         options: testOptions,
         value: testOptions[1].value,
       },
@@ -370,9 +372,10 @@ describe('Form - Field - AutoComplete - Features', () => {
       testOptions[1].label,
     )
 
-    await wrapper.rerender({
-      value: testOptions[2].value,
-    })
+    const node = getNode('autocomplete')
+    node?.input(testOptions[2].value)
+
+    await waitForNextTick(true)
 
     expect(wrapper.getByRole('listitem')).toHaveTextContent(
       testOptions[2].label,
@@ -418,12 +421,12 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
     expect(selectOptions).toHaveLength(
-      wrapper.queryAllByIconName('checked-no').length,
+      wrapper.queryAllByIconName('mobile-check-box-no').length,
     )
 
     wrapper.events.click(selectOptions[0])
@@ -435,8 +438,8 @@ describe('Form - Field - AutoComplete - Features', () => {
     const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
 
     expect(emittedInput[0][0]).toStrictEqual([testOptions[0].value])
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(2)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(1)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(1)
 
@@ -447,14 +450,14 @@ describe('Form - Field - AutoComplete - Features', () => {
     wrapper.events.click(selectOptions[1])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[1][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -465,15 +468,15 @@ describe('Form - Field - AutoComplete - Features', () => {
     wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[2][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
         testOptions[2].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(0)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(3)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(0)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(3)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(3)
 
@@ -484,14 +487,14 @@ describe('Form - Field - AutoComplete - Features', () => {
     wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[3][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -516,7 +519,7 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -590,7 +593,7 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -616,7 +619,7 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     selectOptions = wrapper.getAllByRole('option')
 
@@ -632,45 +635,19 @@ describe('Form - Field - AutoComplete - Features', () => {
     )
   })
 
-  it('supports option autoselect', async () => {
-    const wrapper = renderComponent(FormKit, {
-      ...wrapperParameters,
-      props: {
-        ...testProps,
-        options: [
-          {
-            value: 1,
-            label: 'The One',
-          },
-        ],
-        autoselect: true,
-      },
-    })
-
-    await waitFor(() => {
-      expect(wrapper.emitted().inputRaw).toBeTruthy()
-    })
-
-    const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
-
-    expect(emittedInput[0][0]).toBe(1)
-
-    expect(wrapper.getByRole('listitem')).toHaveTextContent('The One')
-  })
-
   it('supports additional action', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
         ...testProps,
         action: '/route',
-        actionIcon: 'web',
+        actionIcon: 'mobile-web',
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    expect(wrapper.getByIconName('web')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-web')).toBeInTheDocument()
   })
 
   it('supports selection of unknown values', async () => {
@@ -683,7 +660,7 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -705,7 +682,7 @@ describe('Form - Field - AutoComplete - Features', () => {
     expect(emittedInput[0][0]).toBe('Item D')
     expect(wrapper.getByRole('listitem')).toHaveTextContent('Item D')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     selectOptions = wrapper.getAllByRole('option')
 
@@ -724,7 +701,7 @@ describe('Form - Field - AutoComplete - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -749,6 +726,24 @@ describe('Form - Field - AutoComplete - Features', () => {
     expect(selectOptions).toHaveLength(1)
     expect(selectOptions[0]).toHaveTextContent('#foo')
   })
+
+  it('supports value prefill with initial option builder', () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        ...testProps,
+        value: 1234,
+        initialOptionBuilder: (object: ObjectLike, value: SelectValue) => {
+          return {
+            value,
+            label: `Item ${value}`,
+          }
+        },
+      },
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent(`Item 1234`)
+  })
 })
 
 describe('Form - Field - AutoComplete - Accessibility', () => {
@@ -763,11 +758,11 @@ describe('Form - Field - AutoComplete - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '0')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '0')
 
     expect(wrapper.getByRole('button')).toHaveAttribute('tabindex', '0')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -788,7 +783,36 @@ describe('Form - Field - AutoComplete - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '-1')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '-1')
+  })
+
+  it("clicking disabled field doesn't select dialog", async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        ...testProps,
+        options: testOptions,
+        disabled: true,
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('clicking select without options still opens select dialog', async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        ...testProps,
+        options: [],
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
   })
 
   it('provides labels for screen readers', async () => {
@@ -802,7 +826,10 @@ describe('Form - Field - AutoComplete - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('aria-label', 'Select…')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'aria-label',
+      'Select…',
+    )
 
     expect(wrapper.getByRole('button')).toHaveAttribute(
       'aria-label',
@@ -821,7 +848,7 @@ describe('Form - Field - AutoComplete - Accessibility', () => {
       },
     })
 
-    await wrapper.events.type(wrapper.getByRole('list'), '{Space}')
+    await wrapper.events.type(wrapper.getByLabelText('Select…'), '{Space}')
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -857,7 +884,7 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('id', 'test_id')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('id', 'test_id')
 
     expect(wrapper.getByLabelText('Test label')).toHaveAttribute(
       'id',
@@ -875,7 +902,10 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('name', 'test_name')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'name',
+      'test_name',
+    )
   })
 
   it('implements blur handler', async () => {
@@ -890,10 +920,10 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    wrapper.getByRole('list').focus()
+    wrapper.getByLabelText('Select…').focus()
     await wrapper.events.tab()
 
-    expect(blurHandler).toHaveBeenCalled()
+    expect(blurHandler).toHaveBeenCalledOnce()
   })
 
   it('implements input handler', async () => {
@@ -905,7 +935,7 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[1])
 
@@ -946,7 +976,7 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveClass(
+    expect(wrapper.getByLabelText('Select…')).toHaveClass(
       'formkit-disabled:pointer-events-none',
     )
   })
@@ -961,7 +991,7 @@ describe('Form - Field - AutoComplete - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute(
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
       'test-attribute',
       'test_value',
     )

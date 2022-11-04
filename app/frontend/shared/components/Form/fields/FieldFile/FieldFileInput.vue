@@ -148,7 +148,7 @@ const { showImage } = useImageViewer(uploadFiles)
     :disabled="!canInteract"
     @click="canInteract && fileInput?.click()"
   >
-    <CommonIcon name="paperclip" size="tiny" />
+    <CommonIcon name="mobile-attachment" size="base" decorative />
     <span class="text-base">
       {{ $t(uploadTitle) }}
     </span>
@@ -158,6 +158,7 @@ const { showImage } = useImageViewer(uploadFiles)
     data-test-id="fileInput"
     type="file"
     class="hidden"
+    aria-hidden="true"
     :accept="props.context.accept"
     :capture="props.context.capture"
     :multiple="props.context.multiple"

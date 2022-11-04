@@ -11,11 +11,13 @@ describe('FieldResolverDateTime', () => {
       dataOption: {
         // TODO ...
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'DateTime',
       name: 'datetime',
+      required: false,
       props: {},
       type: 'datetime',
     })

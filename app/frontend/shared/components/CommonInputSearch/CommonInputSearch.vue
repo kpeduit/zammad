@@ -52,9 +52,9 @@ export default {
     :class="wrapperClass"
   >
     <CommonIcon
-      :fixed-size="{ width: 24, height: 24 }"
       class="absolute shrink-0 text-gray ltr:left-2 rtl:right-2"
-      name="search"
+      size="base"
+      name="mobile-search"
       decorative
     />
     <input
@@ -62,7 +62,7 @@ export default {
       v-model="filter"
       v-bind="$attrs"
       :placeholder="i18n.t(placeholder)"
-      class="h-12 w-full grow rounded-xl bg-gray-500 px-9 placeholder:text-gray focus:shadow-none focus:outline-none focus:ring-0"
+      class="h-12 w-full grow rounded-xl bg-gray-500 px-9 text-base placeholder:text-gray focus:shadow-none focus:outline-none focus:ring-0"
       :class="{
         'focus:border-white focus:ring-0': !noBorder,
         'focus:border-transparent': noBorder,
@@ -75,9 +75,9 @@ export default {
       <CommonIcon
         v-if="filter && filter.length"
         :aria-label="i18n.t('Clear Search')"
-        :fixed-size="{ width: 24, height: 24 }"
         class="text-gray"
-        name="close-small"
+        size="base"
+        name="mobile-close-small"
         @click.stop="clearFilter"
       />
     </div>

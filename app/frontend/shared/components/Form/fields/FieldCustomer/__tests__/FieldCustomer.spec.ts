@@ -9,6 +9,8 @@ import { createMockClient } from 'mock-apollo-client'
 import { provideApolloClient } from '@vue/apollo-composable'
 import testOptions from '@shared/components/Form/fields/FieldCustomer/__tests__/test-options.json'
 import type { AvatarUser } from '@shared/components/CommonUserAvatar/types'
+import { getNode } from '@formkit/core'
+import { waitForNextTick } from '@tests/support/utils'
 
 const AutocompleteSearchCustomerDocument = gql`
   query autocompleteSearchCustomer($query: String!, $limit: Int) {
@@ -108,6 +110,32 @@ beforeAll(async () => {
   await import('../../FieldAutoComplete/FieldAutoCompleteInputDialog.vue')
 })
 
+describe('Form - Field - Customer - Features', () => {
+  it('supports value prefill with existing entity object in root node', async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        ...testProps,
+        id: 'customer',
+        name: 'customer_id',
+        value: 123,
+        belongsToObjectField: 'customer',
+      },
+    })
+
+    const node = getNode('customer')
+    node!.context!.initialEntityObject = {
+      customer: {
+        fullname: 'John Doe',
+      },
+    }
+
+    await waitForNextTick(true)
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent(`John Doe`)
+  })
+})
+
 // We include only some query-related test cases, as the actual autocomplete component has its own unit test.
 describe('Form - Field - Customer - Query', () => {
   mockClient()
@@ -124,14 +152,13 @@ describe('Form - Field - Customer - Query', () => {
     // Resolve `defineAsyncComponent()` calls first.
     await vi.dynamicImportSettled()
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
     expect(filterElement).toBeInTheDocument()
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search is always case-insensitive.
     await wrapper.events.type(filterElement, 'adam')
@@ -157,7 +184,6 @@ describe('Form - Field - Customer - Query', () => {
     expect(filterElement).toHaveValue('')
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for non-accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'rodríguez')
@@ -179,7 +205,6 @@ describe('Form - Field - Customer - Query', () => {
     await wrapper.events.clear(filterElement)
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'rodríguez')
@@ -211,7 +236,7 @@ describe('Form - Field - Customer - Query', () => {
     // Resolve `defineAsyncComponent()` calls first.
     await vi.dynamicImportSettled()
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -233,8 +258,8 @@ describe('Form - Field - Customer - Query', () => {
       testOptions[0].label,
     )
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    expect(wrapper.getByIconName('check')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-check')).toBeInTheDocument()
   })
 })

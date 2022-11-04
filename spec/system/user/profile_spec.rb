@@ -12,15 +12,15 @@ RSpec.describe 'User Profile', type: :system do
   describe 'object manager attributes maxlength', authenticated_as: :authenticate, db_strategy: :reset do
     def authenticate
       customer
-      create :object_manager_attribute_text, object_name: 'User', name: 'maxtest', display: 'maxtest', screens: attributes_for(:required_screen), data_option: {
-        'type'      => 'text',
-        'maxlength' => 3,
-        'null'      => true,
-        'translate' => false,
-        'default'   => '',
-        'options'   => {},
-        'relation'  => '',
-      }
+      create(:object_manager_attribute_text, object_name: 'User', name: 'maxtest', display: 'maxtest', screens: attributes_for(:required_screen), data_option: {
+               'type'      => 'text',
+               'maxlength' => 3,
+               'null'      => true,
+               'translate' => false,
+               'default'   => '',
+               'options'   => {},
+               'relation'  => '',
+             })
       ObjectManager::Attribute.migration_execute
       true
     end
@@ -54,6 +54,8 @@ RSpec.describe 'User Profile', type: :system do
   end
 
   it 'check that ignored attributes for user popover are not visible' do
+    visit '/'
+
     fill_in id: 'global-search', with: customer.email
 
     popover_on_hover(find('.nav-tab--search.user'))
@@ -79,6 +81,38 @@ RSpec.describe 'User Profile', type: :system do
       click '.js-showMoreOrganizations a'
 
       expect(page).to have_text(organizations[10].name)
+    end
+  end
+
+  context 'when ticket changes in user profile', authenticated_as: :authenticate do
+    let(:ticket) { create(:ticket, title: SecureRandom.uuid, customer: create(:customer, :with_org), group: Group.first) }
+
+    def authenticate
+      ticket
+      true
+    end
+
+    before do
+      visit "#user/profile/#{ticket.customer.id}"
+    end
+
+    it 'does update when ticket changes' do
+      expect(page).to have_text(ticket.title)
+      ticket.update(title: SecureRandom.uuid)
+      expect(page).to have_text(ticket.title)
+    end
+  end
+
+  describe 'Missing secondary organizations in user profile after refreshing with many secondary organizations. #4331' do
+    before do
+      visit "#user/profile/#{customer.id}"
+      page.find('.profile .js-action').click
+      page.find('.profile li[data-type=edit]').click
+    end
+
+    it 'does show all secondary organizations on edit' do
+      tokens = page.all('div[data-attribute-name="organization_ids"] .token')
+      expect(tokens.count).to eq(19)
     end
   end
 end

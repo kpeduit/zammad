@@ -35,6 +35,7 @@ const { isCurrentValue } = useValue(toRef(props, 'context'))
 
 const emit = defineEmits<{
   (e: 'updateOptions', options: AutoCompleteOption[]): void
+  (e: 'action'): void
 }>()
 
 const { sortedOptions, selectOption, advanceDialogFocus } = useSelectOptions(
@@ -195,6 +196,7 @@ const OptionIconComponent =
 const router = useRouter()
 
 const executeAction = () => {
+  emit('action')
   if (!props.context.action) return
   router.push(props.context.action)
 }
@@ -208,29 +210,24 @@ const executeAction = () => {
     class="field-autocomplete-dialog"
     @close="close"
   >
-    <template #before-label>
+    <template v-if="context.action || context.onActionClick" #before-label>
       <div
-        v-if="context.action"
-        class="absolute top-0 left-0 bottom-0 flex items-center pl-4"
+        class="grow cursor-pointer text-white"
+        tabindex="0"
+        role="button"
+        @click="close"
+        @keypress.space="close"
+        @keydown="advanceDialogFocus"
       >
-        <div
-          class="grow cursor-pointer text-white"
-          tabindex="0"
-          role="button"
-          @click="close"
-          @keypress.space="close"
-          @keydown="advanceDialogFocus"
-        >
-          {{ i18n.t('Cancel') }}
-        </div>
+        {{ i18n.t('Cancel') }}
       </div>
     </template>
     <template #after-label>
       <CommonIcon
-        v-if="context.action"
+        v-if="context.action || context.onActionClick"
         :name="context.actionIcon ? context.actionIcon : 'external'"
-        :fixed-size="{ width: 24, height: 24 }"
         class="cursor-pointer text-white"
+        size="base"
         tabindex="0"
         role="button"
         @click="executeAction"
@@ -262,6 +259,8 @@ const executeAction = () => {
       />
     </div>
     <div
+      v-if="filter ? autocompleteOptions.length : options.length"
+      :aria-label="$t('Select…')"
       class="flex grow flex-col items-start self-stretch overflow-y-auto"
       role="listbox"
     >
@@ -297,9 +296,13 @@ const executeAction = () => {
             '!text-white': isCurrentValue(option.value),
             'opacity-30': option.disabled,
           }"
-          :fixed-size="{ width: 24, height: 24 }"
-          :name="isCurrentValue(option.value) ? 'checked-yes' : 'checked-no'"
+          :name="
+            isCurrentValue(option.value)
+              ? 'mobile-check-box-yes'
+              : 'mobile-check-box-no'
+          "
           class="mr-3 text-white/50"
+          size="base"
         />
         <OptionIconComponent :option="option" />
         <div
@@ -338,28 +341,28 @@ const executeAction = () => {
           :class="{
             'opacity-30': option.disabled,
           }"
-          :fixed-size="{ width: 16, height: 16 }"
-          name="check"
+          size="tiny"
+          name="mobile-check"
         />
       </div>
-      <div
-        v-if="
-          debouncedFilter &&
-          autocompleteQueryResultOptions &&
-          !autocompleteOptions.length
-        "
-        class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
-        role="alert"
-      >
-        {{ i18n.t('No results found') }}
-      </div>
-      <div
-        v-else-if="!debouncedFilter && !options.length"
-        class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
-        role="alert"
-      >
-        {{ i18n.t('Start typing to search…') }}
-      </div>
+    </div>
+    <div
+      v-if="
+        debouncedFilter &&
+        autocompleteQueryResultOptions &&
+        !autocompleteOptions.length
+      "
+      class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
+      role="alert"
+    >
+      {{ i18n.t('No results found') }}
+    </div>
+    <div
+      v-else-if="!debouncedFilter && !options.length"
+      class="relative flex h-[58px] items-center justify-center self-stretch py-5 px-4 text-base leading-[19px] text-white/50"
+      role="alert"
+    >
+      {{ i18n.t('Start typing to search…') }}
     </div>
   </CommonDialog>
 </template>

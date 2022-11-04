@@ -49,7 +49,7 @@ describe('Form - Field - Select - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -70,10 +70,11 @@ describe('Form - Field - Select - Dialog', () => {
       props: {
         type: 'select',
         options: testOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[0])
 
@@ -98,16 +99,17 @@ describe('Form - Field - Select - Dialog', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(
       getByText(wrapper.getByRole('listbox'), testOptions[1].label),
     ).toHaveClass('font-semibold')
 
     expect(
+      // TODO should work just with view.getByIconName('mobile-check') with Vitest 0.19
       wrapper.getByIconName((name, node) => {
         return (
-          name === '#icon-check' &&
+          name === '#icon-mobile-check' &&
           !node?.parentElement?.classList.contains('invisible')
         )
       }),
@@ -120,7 +122,7 @@ describe('Form - Field - Select - Dialog', () => {
 })
 
 describe('Form - Field - Select - Options', () => {
-  it('supports options mutation', async () => {
+  it('supports unknown options', async () => {
     const optionsProp = cloneDeep(testOptions)
 
     const wrapper = renderComponent(FormKit, {
@@ -132,9 +134,9 @@ describe('Form - Field - Select - Options', () => {
       },
     })
 
-    expect(wrapper.getByRole('listitem')).toHaveTextContent('3')
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('3 (unknown)')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -162,6 +164,42 @@ describe('Form - Field - Select - Options', () => {
     expect(wrapper.getByRole('listitem')).toHaveTextContent('Item D')
   })
 
+  it('supports clearing of the existing value when option goes away', async () => {
+    const optionsProp = cloneDeep(testOptions)
+
+    optionsProp.push({
+      value: 3,
+      label: 'Item D',
+    })
+
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        clearable: true, // otherwise it defaults to the first option
+        type: 'select',
+        value: 3,
+        options: optionsProp,
+      },
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item D')
+
+    optionsProp.pop()
+
+    await wrapper.rerender({
+      options: optionsProp,
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
+
+    expect(emittedInput[0][0]).toBe(undefined)
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+  })
+
   it('supports disabled property', async () => {
     const disabledOptions = [
       {
@@ -187,7 +225,7 @@ describe('Form - Field - Select - Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.getAllByRole('option')[1]).toHaveClass('pointer-events-none')
 
@@ -233,7 +271,7 @@ describe('Form - Field - Select - Options', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
     const selectedOptionStatuses = wrapper.getAllByRole('group')
@@ -253,12 +291,12 @@ describe('Form - Field - Select - Options', () => {
       {
         value: 1,
         label: 'GitLab',
-        icon: 'gitlab-logo',
+        icon: 'mobile-gitlab',
       },
       {
         value: 2,
         label: 'GitHub',
-        icon: 'github-logo',
+        icon: 'mobile-github',
       },
     ]
 
@@ -267,10 +305,11 @@ describe('Form - Field - Select - Options', () => {
       props: {
         type: 'select',
         options: iconOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     expect(wrapper.queryByIconName(iconOptions[0].icon)).toBeInTheDocument()
     expect(wrapper.queryByIconName(iconOptions[1].icon)).toBeInTheDocument()
@@ -358,12 +397,12 @@ describe('Form - Field - Select - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
     expect(selectOptions).toHaveLength(
-      wrapper.queryAllByIconName('checked-no').length,
+      wrapper.queryAllByIconName('mobile-check-box-no').length,
     )
 
     await wrapper.events.click(selectOptions[0])
@@ -375,8 +414,8 @@ describe('Form - Field - Select - Features', () => {
     const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
 
     expect(emittedInput[0][0]).toStrictEqual([testOptions[0].value])
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(2)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(1)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(1)
 
@@ -389,14 +428,14 @@ describe('Form - Field - Select - Features', () => {
     await wrapper.events.click(selectOptions[1])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[1][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -409,15 +448,15 @@ describe('Form - Field - Select - Features', () => {
     await wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[2][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
         testOptions[2].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(0)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(3)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(0)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(3)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(3)
 
@@ -430,14 +469,14 @@ describe('Form - Field - Select - Features', () => {
     await wrapper.events.click(selectOptions[2])
 
     await waitFor(() => {
-      expect(emittedInput[0][0]).toStrictEqual([
+      expect(emittedInput[3][0]).toStrictEqual([
         testOptions[0].value,
         testOptions[1].value,
       ])
     })
 
-    expect(wrapper.queryAllByIconName('checked-no')).toHaveLength(1)
-    expect(wrapper.queryAllByIconName('checked-yes')).toHaveLength(2)
+    expect(wrapper.queryAllByIconName('mobile-check-box-no')).toHaveLength(1)
+    expect(wrapper.queryAllByIconName('mobile-check-box-yes')).toHaveLength(2)
     expect(wrapper.queryByRole('dialog')).toBeInTheDocument()
     expect(wrapper.queryAllByRole('listitem')).toHaveLength(2)
 
@@ -462,7 +501,7 @@ describe('Form - Field - Select - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -526,7 +565,7 @@ describe('Form - Field - Select - Features', () => {
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     let selectOptions = wrapper.getAllByRole('option')
 
@@ -544,7 +583,7 @@ describe('Form - Field - Select - Features', () => {
       noOptionsLabelTranslation: true,
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     selectOptions = wrapper.getAllByRole('option')
 
@@ -559,18 +598,14 @@ describe('Form - Field - Select - Features', () => {
     )
   })
 
-  it('supports option autoselect', async () => {
+  it('supports option preselect', async () => {
     const wrapper = renderComponent(FormKit, {
       ...wrapperParameters,
       props: {
         type: 'select',
-        options: [
-          {
-            value: 1,
-            label: 'The One',
-          },
-        ],
-        autoselect: true,
+        name: 'select',
+        id: 'select',
+        options: testOptions,
       },
     })
 
@@ -578,11 +613,86 @@ describe('Form - Field - Select - Features', () => {
       expect(wrapper.emitted().inputRaw).toBeTruthy()
     })
 
-    const emittedInput = wrapper.emitted().inputRaw as Array<Array<InputEvent>>
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item A')
 
-    expect(emittedInput[0][0]).toBe(1)
+    await wrapper.rerender({
+      clearable: true,
+    })
 
-    expect(wrapper.getByRole('listitem')).toHaveTextContent('The One')
+    await wrapper.events.click(wrapper.getByRole('button'))
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item A')
+
+    await wrapper.rerender({
+      clearable: true,
+    })
+
+    // Reset the value before the next test case
+    const node = getNode('select')
+    node?.input(null)
+
+    await wrapper.rerender({
+      clearable: false,
+      options: [
+        {
+          value: 2,
+          label: 'Item C',
+        },
+      ],
+    })
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent('Item C')
+
+    await wrapper.rerender({
+      clearable: true,
+      multiple: true,
+    })
+
+    await wrapper.events.click(wrapper.getByRole('button'))
+
+    await waitFor(() => {
+      expect(wrapper.emitted().inputRaw).toBeTruthy()
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: true,
+      multiple: false,
+      disabled: true,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
+
+    await wrapper.rerender({
+      clearable: false,
+    })
+
+    expect(wrapper.queryByRole('listitem')).not.toBeInTheDocument()
   })
 
   it('supports small size', async () => {
@@ -601,7 +711,9 @@ describe('Form - Field - Select - Features', () => {
       'bg-gray-600 rounded-lg w-auto',
     )
 
-    expect(wrapper.getByText('Test label')).toHaveClass('hidden')
+    expect(
+      wrapper.getByLabelText('Test label').closest('.formkit-outer'),
+    ).toHaveAttribute('data-label-hidden')
 
     await wrapper.rerender({
       size: undefined,
@@ -611,7 +723,9 @@ describe('Form - Field - Select - Features', () => {
       'bg-gray-600 rounded-lg w-auto',
     )
 
-    expect(wrapper.getByText('Test label')).not.toHaveClass('hidden')
+    expect(
+      wrapper.getByLabelText('Test label').closest('.formkit-outer'),
+    ).not.toHaveAttribute('data-label-hidden')
   })
 })
 
@@ -627,11 +741,11 @@ describe('Form - Field - Select - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '0')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '0')
 
     expect(wrapper.getByRole('button')).toHaveAttribute('tabindex', '0')
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -652,7 +766,36 @@ describe('Form - Field - Select - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('tabindex', '-1')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('tabindex', '-1')
+  })
+
+  it("clicking disabled field doesn't select dialog", async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        type: 'select',
+        options: testOptions,
+        disabled: true,
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it("clicking select without options doesn't open select dialog", async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        type: 'select',
+        options: [],
+      },
+    })
+
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
+
+    expect(wrapper.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('provides labels for screen readers', async () => {
@@ -666,7 +809,10 @@ describe('Form - Field - Select - Accessibility', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('aria-label', 'Select…')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'aria-label',
+      'Select…',
+    )
 
     expect(wrapper.getByRole('button')).toHaveAttribute(
       'aria-label',
@@ -685,7 +831,7 @@ describe('Form - Field - Select - Accessibility', () => {
       },
     })
 
-    await wrapper.events.type(wrapper.getByRole('list'), '{Space}')
+    await wrapper.events.type(wrapper.getByLabelText('Select…'), '{Space}')
 
     const selectOptions = wrapper.getAllByRole('option')
 
@@ -721,7 +867,7 @@ describe('Form - Field - Select - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('id', 'test_id')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute('id', 'test_id')
 
     expect(wrapper.getByLabelText('Test label')).toHaveAttribute(
       'id',
@@ -739,7 +885,10 @@ describe('Form - Field - Select - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute('name', 'test_name')
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
+      'name',
+      'test_name',
+    )
   })
 
   it('implements blur handler', async () => {
@@ -754,10 +903,10 @@ describe('Form - Field - Select - Input Checklist', () => {
       },
     })
 
-    wrapper.getByRole('list').focus()
+    wrapper.getByLabelText('Select…').focus()
     await wrapper.events.tab()
 
-    expect(blurHandler).toHaveBeenCalled()
+    expect(blurHandler).toHaveBeenCalledOnce()
   })
 
   it('implements input handler', async () => {
@@ -766,10 +915,11 @@ describe('Form - Field - Select - Input Checklist', () => {
       props: {
         type: 'select',
         options: testOptions,
+        clearable: true,
       },
     })
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     wrapper.events.click(wrapper.getAllByRole('option')[1])
 
@@ -810,7 +960,7 @@ describe('Form - Field - Select - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveClass(
+    expect(wrapper.getByLabelText('Select…')).toHaveClass(
       'formkit-disabled:pointer-events-none',
     )
   })
@@ -825,7 +975,7 @@ describe('Form - Field - Select - Input Checklist', () => {
       },
     })
 
-    expect(wrapper.getByRole('list')).toHaveAttribute(
+    expect(wrapper.getByLabelText('Select…')).toHaveAttribute(
       'test-attribute',
       'test_value',
     )

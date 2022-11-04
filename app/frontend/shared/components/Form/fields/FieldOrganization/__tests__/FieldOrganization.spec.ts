@@ -4,13 +4,14 @@ import { escapeRegExp } from 'lodash-es'
 import gql from 'graphql-tag'
 import { waitFor } from '@testing-library/vue'
 import { FormKit } from '@formkit/vue'
+import { getNode } from '@formkit/core'
 import { renderComponent } from '@tests/support/components'
 import { queryByIconName } from '@tests/support/components/iconQueries'
 import testOptions from '@shared/components/Form/fields/FieldOrganization/__tests__/test-options.json'
 import type { AvatarOrganization } from '@shared/components/CommonOrganizationAvatar/types'
 import type { MockGraphQLInstance } from '@tests/support/mock-graphql-api'
 import { mockGraphQLApi } from '@tests/support/mock-graphql-api'
-import { waitUntil } from '@tests/support/utils'
+import { waitForNextTick, waitUntil } from '@tests/support/utils'
 
 vi.mock('@vueuse/core', async () => {
   const mod = await vi.importActual<typeof import('@vueuse/core')>(
@@ -106,6 +107,34 @@ beforeAll(async () => {
   await import('../../FieldAutoComplete/FieldAutoCompleteInputDialog.vue')
 })
 
+describe('Form - Field - Organization - Features', () => {
+  it('supports value prefill with existing entity object in root node', async () => {
+    const wrapper = renderComponent(FormKit, {
+      ...wrapperParameters,
+      props: {
+        ...testProps,
+        id: 'organization',
+        name: 'organization_id',
+        value: 123,
+        belongsToObjectField: 'organization',
+      },
+    })
+
+    const node = getNode('organization')
+    node!.context!.initialEntityObject = {
+      organization: {
+        name: 'Zammad Organization',
+      },
+    }
+
+    await waitForNextTick(true)
+
+    expect(wrapper.getByRole('listitem')).toHaveTextContent(
+      `Zammad Organization`,
+    )
+  })
+})
+
 // We include only some query-related test cases, since the actual autocomplete component has its own unit test.
 describe('Form - Field - Organization - Query', () => {
   let mockApi: MockGraphQLInstance
@@ -132,14 +161,13 @@ describe('Form - Field - Organization - Query', () => {
     // Resolve `defineAsyncComponent()` calls first.
     await vi.dynamicImportSettled()
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
     expect(filterElement).toBeInTheDocument()
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search is always case-insensitive.
     await wrapper.events.type(filterElement, 'zammad')
@@ -160,8 +188,8 @@ describe('Form - Field - Organization - Query', () => {
       queryByIconName(
         selectOptions[0],
         testOptions[0].organization.active
-          ? 'organization'
-          : 'inactive-organization',
+          ? 'mobile-organization'
+          : 'mobile-inactive-organization',
       ),
     ).toBeInTheDocument()
 
@@ -170,7 +198,6 @@ describe('Form - Field - Organization - Query', () => {
     expect(filterElement).toHaveValue('')
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for non-accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'rodriguez')
@@ -189,15 +216,14 @@ describe('Form - Field - Organization - Query', () => {
       queryByIconName(
         selectOptions[0],
         testOptions[7].organization.active
-          ? 'organization'
-          : 'inactive-organization',
+          ? 'mobile-organization'
+          : 'mobile-inactive-organization',
       ),
     ).toBeInTheDocument()
 
     await wrapper.events.clear(filterElement)
 
     expect(wrapper.queryByText('Start typing to search…')).toBeInTheDocument()
-    expect(wrapper.queryByRole('option')).not.toBeInTheDocument()
 
     // Search for accented characters matches items with accents too.
     await wrapper.events.type(filterElement, 'rodríguez')
@@ -216,8 +242,8 @@ describe('Form - Field - Organization - Query', () => {
       queryByIconName(
         selectOptions[0],
         testOptions[7].organization.active
-          ? 'organization'
-          : 'inactive-organization',
+          ? 'mobile-organization'
+          : 'mobile-inactive-organization',
       ),
     ).toBeInTheDocument()
   })
@@ -234,7 +260,7 @@ describe('Form - Field - Organization - Query', () => {
     // Resolve `defineAsyncComponent()` calls first.
     await vi.dynamicImportSettled()
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
     const filterElement = wrapper.getByRole('searchbox')
 
@@ -258,8 +284,8 @@ describe('Form - Field - Organization - Query', () => {
       testOptions[0].label,
     )
 
-    await wrapper.events.click(wrapper.getByRole('list'))
+    await wrapper.events.click(wrapper.getByLabelText('Select…'))
 
-    expect(wrapper.getByIconName('check')).toBeInTheDocument()
+    expect(wrapper.getByIconName('mobile-check')).toBeInTheDocument()
   })
 })

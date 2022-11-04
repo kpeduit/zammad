@@ -11,11 +11,13 @@ describe('FieldResolverRichtext', () => {
       dataOption: {
         // TODO ...
       },
+      isInternal: true,
     })
 
     expect(fieldResolver.fieldAttributes()).toEqual({
       label: 'Body',
       name: 'body',
+      required: false,
       props: {},
       type: 'editor',
     })

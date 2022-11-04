@@ -65,10 +65,18 @@ const editor = useEditor({
   editable: props.context.disabled !== true,
   content: currentValue.value,
   onUpdate: ({ editor }) => {
-    props.context.node.input(editor.getHTML())
+    const html = editor.getHTML()
+    if (html === '<p></p>') {
+      props.context.node.input('')
+    } else {
+      props.context.node.input(html)
+    }
   },
   onFocus() {
     showActionBar.value = true
+  },
+  onBlur() {
+    props.context.handlers.blur()
   },
 })
 
@@ -92,15 +100,17 @@ watch(
   },
 )
 
-watch(
-  () => props.context.disabled,
-  (disabled) => {
-    editor.value?.setEditable(!disabled)
-    if (disabled && showActionBar.value) {
-      showActionBar.value = false
-    }
-  },
-)
+// TODO: https://github.com/ueberdosis/tiptap/issues/3289
+//   At the moment the "setEditable" change triggers a "onUpdate", which triggers a unwanted input event with the current value.
+// watch(
+//   () => props.context.disabled,
+//   (disabled) => {
+//     editor.value?.setEditable(!disabled)
+//     if (disabled && showActionBar.value) {
+//       showActionBar.value = false
+//     }
+//   },
+// )
 
 // Set the new editor value, when it was changed from outside (e.G. form schema update).
 props.context.node.on('input', ({ payload: value }) => {
